@@ -7,6 +7,10 @@ const PORT = process.env.PORT || 3000;
 // Serve static files from the public folder
 app.use(express.static('public'));
 
+// Dashboard route
+const dashboardRoute = require('./routes/dashboard');
+app.use('/dashboard', dashboardRoute);
+
 // Root route
 app.get('/', (req, res) => {
   res.send('IronLink CRM is up and running!');
