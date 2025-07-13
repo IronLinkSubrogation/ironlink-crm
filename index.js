@@ -4,27 +4,31 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve static assets from /public (e.g., HTML, CSS)
+// Serve static files from the public folder (HTML, CSS, etc.)
 app.use(express.static('public'));
 
-// Enable form data parsing for POST requests
+// Enable parsing for form POST submissions
 app.use(express.urlencoded({ extended: true }));
 
-// Route: Dashboard
+// Route: Dashboard page
 const dashboardRoute = require('./routes/dashboard');
 app.use('/dashboard', dashboardRoute);
 
-// Route: Client intake form
+// Route: Client intake form (submits to clients.json)
 const clientsRoute = require('./routes/clients');
 app.use('/clients', clientsRoute);
 
-// Route: View stored clients
+// Route: View submitted clients
 const viewClientsRoute = require('./routes/viewClients');
 app.use('/view-clients', viewClientsRoute);
 
-// ✅ Route: Claim intake form (new in Step 2.5)
+// Route: Claim intake form (submits to claims.json)
 const claimsRoute = require('./routes/claims');
 app.use('/claims', claimsRoute);
+
+// ✅ NEW: View submitted recovery claims
+const viewClaimsRoute = require('./routes/viewClaims');
+app.use('/view-claims', viewClaimsRoute);
 
 // Root route sanity check
 app.get('/', (req, res) => {
