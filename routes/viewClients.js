@@ -7,9 +7,10 @@ const router = express.Router();
 const DATA_FILE = path.join(__dirname, '..', 'data', 'clients.json');
 
 router.get('/', (req, res) => {
+  // Read all client records
   const clients = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
 
-  // Generate basic HTML to display client data
+  // Render simple HTML showing each client
   const html = `
     <html>
       <head>
@@ -20,14 +21,14 @@ router.get('/', (req, res) => {
         <h1>Stored Clients</h1>
         <nav>
           <a href="/dashboard">Dashboard</a>
-          <a href="/clients">Intake Form</a>
+          <a href="/clients">Client Intake</a>
         </nav>
         <ul>
           ${clients.map(client => `
             <li>
               <strong>${client.name}</strong> (${client.email})<br/>
-              Tag: ${client.caseTag}<br/>
-              Notes: ${client.notes}<br/>
+              Tag: ${client.caseTag || '—'}<br/>
+              Notes: ${client.notes || '—'}<br/>
               Submitted: ${new Date(client.timestamp).toLocaleString()}
             </li>
           `).join('')}
