@@ -4,29 +4,25 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware to serve static files from /public
+// Serve static assets (CSS, HTML forms) from /public
 app.use(express.static('public'));
 
-// Middleware to parse incoming form data
+// Parse POST form data
 app.use(express.urlencoded({ extended: true }));
 
-// Dashboard route
+// Route: Dashboard
 const dashboardRoute = require('./routes/dashboard');
 app.use('/dashboard', dashboardRoute);
 
-// Clients intake route
+// Route: Client Intake (POST logic)
 const clientsRoute = require('./routes/clients');
 app.use('/clients', clientsRoute);
 
-// View stored clients
+// ✅ Route: View Stored Clients (GET /view-clients)
 const viewClientsRoute = require('./routes/viewClients');
 app.use('/view-clients', viewClientsRoute);
 
-// Claims intake route (newly added in Step 2.5)
-const claimsRoute = require('./routes/claims');
-app.use('/claims', claimsRoute);
-
-// Root route
+// Root sanity check
 app.get('/', (req, res) => {
   res.send('IronLink CRM is up and running!');
 });
