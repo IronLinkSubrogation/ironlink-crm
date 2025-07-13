@@ -7,13 +7,20 @@ const PORT = process.env.PORT || 3000;
 // Middleware to serve static files from /public
 app.use(express.static('public'));
 
+// Parse form data globally (useful for POST routes)
+app.use(express.urlencoded({ extended: true }));
+
 // Dashboard route
 const dashboardRoute = require('./routes/dashboard');
 app.use('/dashboard', dashboardRoute);
 
-// Clients route
+// Clients intake route (POST handling)
 const clientsRoute = require('./routes/clients');
 app.use('/clients', clientsRoute);
+
+// View stored clients (GET rendering)
+const viewClientsRoute = require('./routes/viewClients');
+app.use('/view-clients', viewClientsRoute);
 
 // Root route
 app.get('/', (req, res) => {
