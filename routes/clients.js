@@ -7,7 +7,7 @@ router.use(express.urlencoded({ extended: true }));
 
 const DATA_FILE = path.join(__dirname, '..', 'data', 'clients.json');
 
-// Ensure data folder exists
+// Ensure file and folder exist
 const ensureDataFile = () => {
   const dir = path.dirname(DATA_FILE);
   if (!fs.existsSync(dir)) {
@@ -22,9 +22,15 @@ ensureDataFile();
 
 router.post('/', (req, res) => {
   const { name, email, caseTag, notes } = req.body;
-  const newClient = { name, email, caseTag, notes, timestamp: Date.now() };
+  const newClient = {
+    name,
+    email,
+    caseTag,
+    notes,
+    timestamp: Date.now()
+  };
 
-  // Read current data
+  // Read existing data
   const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
   data.push(newClient);
 
