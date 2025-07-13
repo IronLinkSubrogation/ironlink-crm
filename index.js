@@ -4,17 +4,17 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve static files from the public folder (HTML, CSS, etc.)
+// Serve static files (HTML, CSS, JS) from /public
 app.use(express.static('public'));
 
-// Enable parsing for form POST submissions
+// Enable form data parsing for POST requests
 app.use(express.urlencoded({ extended: true }));
 
-// Route: Dashboard page
+// Route: Dashboard
 const dashboardRoute = require('./routes/dashboard');
 app.use('/dashboard', dashboardRoute);
 
-// Route: Client intake form (submits to clients.json)
+// Route: Client intake
 const clientsRoute = require('./routes/clients');
 app.use('/clients', clientsRoute);
 
@@ -22,20 +22,22 @@ app.use('/clients', clientsRoute);
 const viewClientsRoute = require('./routes/viewClients');
 app.use('/view-clients', viewClientsRoute);
 
-// Route: Claim intake form (submits to claims.json)
+// Route: Claim intake
 const claimsRoute = require('./routes/claims');
 app.use('/claims', claimsRoute);
 
-// ✅ NEW: View submitted recovery claims
+// Route: View submitted claims
 const viewClaimsRoute = require('./routes/viewClaims');
 app.use('/view-claims', viewClaimsRoute);
 
-// Root route sanity check
-app.get('/', (req, res) => {
-  res.send('IronLink CRM is up and running!');
-});
+// ✅ NEW: Document intake (Phase 4)
+const documentsRoute = require('./routes/documents');
+app.use('/documents', documentsRoute);
 
-// Start Express server
-app.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}`);
-});
+// (Coming soon) View submitted documents
+// const viewDocumentsRoute = require('./routes/viewDocuments');
+// app.use('/view-documents', viewDocumentsRoute);
+
+// Root sanity check
+app.get('/', (req, res) => {
+  res.send('IronLink CRM is
