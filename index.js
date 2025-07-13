@@ -4,12 +4,16 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve static files from the public folder
+// Middleware to serve static files from /public
 app.use(express.static('public'));
 
 // Dashboard route
 const dashboardRoute = require('./routes/dashboard');
 app.use('/dashboard', dashboardRoute);
+
+// Clients route
+const clientsRoute = require('./routes/clients');
+app.use('/clients', clientsRoute);
 
 // Root route
 app.get('/', (req, res) => {
