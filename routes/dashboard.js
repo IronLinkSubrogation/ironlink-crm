@@ -1,7 +1,3 @@
-// Route: /dashboard
-// Displays submitted clients, claims, and documents
-// Includes client search filtering and highlighted terms
-
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -14,6 +10,12 @@ const DOCUMENTS_FILE = path.join(__dirname, '..', 'data', 'documents.json');
 router.get('/', (req, res) => {
   const searchQuery = req.query.q?.toLowerCase() || '';
 
+  const highlight = (text) => {
+    if (!searchQuery || typeof text !== 'string') return text;
+    return text.replace(new RegExp(`(${searchQuery})`, 'gi'), '<mark>$1</mark>');
+  };
+
+  // Filter and sort clients
   const allClients = JSON.parse(fs.readFileSync(CLIENTS_FILE, 'utf-8'));
   const filteredClients = allClients.filter(c =>
     c.clientName.toLowerCase().includes(searchQuery) ||
@@ -22,13 +24,23 @@ router.get('/', (req, res) => {
     (c.notes || '').toLowerCase().includes(searchQuery)
   ).sort((a, b) => b.timestamp - a.timestamp);
 
-  const claims = JSON.parse(fs.readFileSync(CLAIMS_FILE, 'utf-8')).sort((a, b) => b.timestamp - a.timestamp);
-  const documents = JSON.parse(fs.readFileSync(DOCUMENTS_FILE, 'utf-8')).sort((a, b) => b.timestamp - a.timestamp);
+  // Filter and sort claims
+  const allClaims = JSON.parse(fs.readFileSync(CLAIMS_FILE, 'utf-8'));
+  const filteredClaims = allClaims.filter(c =>
+    c.claimNumber.toLowerCase().includes(searchQuery) ||
+    c.clientTag.toLowerCase().includes(searchQuery) ||
+    c.lossDate.toLowerCase().includes(searchQuery) ||
+    (c.claimNotes || '').toLowerCase().includes(searchQuery)
+  ).sort((a, b) => b.timestamp - a.timestamp);
 
-  const highlight = (text) => {
-    if (!searchQuery || typeof text !== 'string') return text;
-    return text.replace(new RegExp(`(${searchQuery})`, 'gi'), '<mark>$1</mark>');
-  };
+  // Filter and sort documents
+  const allDocs = JSON.parse(fs.readFileSync(DOCUMENTS_FILE, 'utf-8'));
+  const filteredDocs = allDocs.filter(d =>
+    d.documentName.toLowerCase().includes(searchQuery) ||
+    d.associatedClaim.toLowerCase().includes(searchQuery) ||
+    d.documentType.toLowerCase().includes(searchQuery) ||
+    (d.documentNotes || '').toLowerCase().includes(searchQuery)
+  ).sort((a, b) => b.timestamp - a.timestamp);
 
   let html = `
     <!DOCTYPE html>
@@ -48,8 +60,8 @@ router.get('/', (req, res) => {
       </nav>
 
       <form method="GET" action="/dashboard" style="margin-top:20px;">
-        <label for="search">🔍 Search Clients:</label>
-        <input type="text" id="search" name="q" value="${searchQuery}" placeholder="Name, Email, or Tag" />
+        <label for="search">🔍 Search All Entries:</label>
+        <input type="text" id="search" name="q" value="${searchQuery}" placeholder="Search clients, claims, documents..." />
         <button type="submit">Search</button>
       </form>
 
@@ -75,13 +87,13 @@ router.get('/', (req, res) => {
       <div class="entry-list">
   `;
 
-  claims.forEach((claim, i) => {
+  filteredClaims.forEach((claim, i) => {
     html += `
       <div class="entry">
-        <strong>${i + 1}. Claim #${claim.claimNumber}</strong><br />
-        Client Tag: ${claim.clientTag}<br />
-        Loss Date: ${claim.lossDate}<br />
-        Notes: ${claim.claimNotes || 'None'}<br />
+        <strong>${i + 1}. Claim #${highlight(claim.claimNumber)}</strong><br />
+        Client Tag: ${highlight(claim.clientTag)}<br />
+        Loss Date: ${highlight(claim.lossDate)}<br />
+        Notes: ${highlight(claim.claimNotes || 'None')}<br />
         Submitted: ${new Date(claim.timestamp).toLocaleString()}
       </div>
     `;
@@ -93,13 +105,13 @@ router.get('/', (req, res) => {
       <div class="entry-list">
   `;
 
-  documents.forEach((doc, i) => {
+  filteredDocs.forEach((doc, i) => {
     html += `
       <div class="entry">
-        <strong>${i + 1}. ${doc.documentName}</strong><br />
-        Claim #: ${doc.associatedClaim}<br />
-        Type: ${doc.documentType}<br />
-        Notes: ${doc.documentNotes || 'None'}<br />
+        <strong>${i + 1}. ${highlight(doc.documentName)}</strong><br />
+        Claim #: ${highlight(doc.associatedClaim)}<br />
+        Type: ${highlight(doc.documentType)}<br />
+        Notes: ${highlight(doc.documentNotes || 'None')}<br />
         Submitted: ${new Date(doc.timestamp).toLocaleString()}
       </div>
     `;
