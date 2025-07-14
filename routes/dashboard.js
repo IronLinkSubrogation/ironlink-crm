@@ -1,6 +1,6 @@
 // Route: /dashboard
 // Displays submitted clients, claims, and documents
-// Includes search form and highlight functionality for client list
+// Includes search filtering and highlighted matches for client entries
 
 const express = require('express');
 const fs = require('fs');
@@ -14,7 +14,6 @@ const DOCUMENTS_FILE = path.join(__dirname, '..', 'data', 'documents.json');
 router.get('/', (req, res) => {
   const searchQuery = req.query.q?.toLowerCase() || '';
 
-  // Load and filter client results
   const allClients = JSON.parse(fs.readFileSync(CLIENTS_FILE, 'utf-8'));
   const filteredClients = allClients.filter(c =>
     c.clientName.toLowerCase().includes(searchQuery) ||
@@ -26,7 +25,6 @@ router.get('/', (req, res) => {
   const claims = JSON.parse(fs.readFileSync(CLAIMS_FILE, 'utf-8')).sort((a, b) => b.timestamp - a.timestamp);
   const documents = JSON.parse(fs.readFileSync(DOCUMENTS_FILE, 'utf-8')).sort((a, b) => b.timestamp - a.timestamp);
 
-  // Utility to highlight matching terms
   const highlight = (text) => {
     if (!searchQuery || typeof text !== 'string') return text;
     return text.replace(new RegExp(`(${searchQuery})`, 'gi'), '<mark>$1</mark>');
@@ -59,7 +57,6 @@ router.get('/', (req, res) => {
       <div class="entry-list">
   `;
 
-  // Render filtered and highlighted clients
   filteredClients.forEach((client, i) => {
     html += `
       <div class="entry">
