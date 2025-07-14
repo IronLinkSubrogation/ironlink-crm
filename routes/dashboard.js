@@ -1,6 +1,6 @@
 // Route: /dashboard
 // Displays submitted clients, claims, and documents
-// Includes search filtering and highlighted matches for client entries
+// Includes client search filtering and highlighted terms
 
 const express = require('express');
 const fs = require('fs');
