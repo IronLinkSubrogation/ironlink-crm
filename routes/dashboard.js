@@ -1,6 +1,3 @@
-// Route: /dashboard
-// Displays submitted clients, claims, and documents with CSS styling and sorted by timestamp
-
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -11,7 +8,16 @@ const CLAIMS_FILE = path.join(__dirname, '..', 'data', 'claims.json');
 const DOCUMENTS_FILE = path.join(__dirname, '..', 'data', 'documents.json');
 
 router.get('/', (req, res) => {
-  const clients = JSON.parse(fs.readFileSync(CLIENTS_FILE, 'utf-8')).sort((a, b) => b.timestamp - a.timestamp);
+  const searchQuery = req.query.q?.toLowerCase() || '';
+
+  const clients = JSON.parse(fs.readFileSync(CLIENTS_FILE, 'utf-8'))
+    .filter(c =>
+      c.clientName.toLowerCase().includes(searchQuery) ||
+      c.clientEmail.toLowerCase().includes(searchQuery) ||
+      c.clientTag.toLowerCase().includes(searchQuery)
+    )
+    .sort((a, b) => b.timestamp - a.timestamp);
+
   const claims = JSON.parse(fs.readFileSync(CLAIMS_FILE, 'utf-8')).sort((a, b) => b.timestamp - a.timestamp);
   const documents = JSON.parse(fs.readFileSync(DOCUMENTS_FILE, 'utf-8')).sort((a, b) => b.timestamp - a.timestamp);
 
@@ -32,6 +38,12 @@ router.get('/', (req, res) => {
         <a href="/documents">Submit Document</a>
       </nav>
 
+      <form method="GET" action="/dashboard" style="margin-top:20px;">
+        <label for="search">🔍 Search Clients:</label>
+        <input type="text" id="search" name="q" value="${searchQuery}" placeholder="Name, Email, or Tag" />
+        <button type="submit">Search</button>
+      </form>
+
       <h2>📁 Clients</h2>
       <div class="entry-list">
   `;
@@ -48,49 +60,8 @@ router.get('/', (req, res) => {
     `;
   });
 
-  html += `
-      </div>
-      <h2>🧾 Claims</h2>
-      <div class="entry-list">
-  `;
-
+  html += `<h2>🧾 Claims</h2><div class="entry-list">`;
   claims.forEach((claim, i) => {
     html += `
       <div class="entry">
-        <strong>${i + 1}. Claim #${claim.claimNumber}</strong><br />
-        Client Tag: ${claim.clientTag}<br />
-        Loss Date: ${claim.lossDate}<br />
-        Notes: ${claim.claimNotes || 'None'}<br />
-        Submitted: ${new Date(claim.timestamp).toLocaleString()}
-      </div>
-    `;
-  });
-
-  html += `
-      </div>
-      <h2>📎 Documents</h2>
-      <div class="entry-list">
-  `;
-
-  documents.forEach((doc, i) => {
-    html += `
-      <div class="entry">
-        <strong>${i + 1}. ${doc.documentName}</strong><br />
-        Claim #: ${doc.associatedClaim}<br />
-        Type: ${doc.documentType}<br />
-        Notes: ${doc.documentNotes || 'None'}<br />
-        Submitted: ${new Date(doc.timestamp).toLocaleString()}
-      </div>
-    `;
-  });
-
-  html += `
-      </div>
-    </body>
-    </html>
-  `;
-
-  res.send(html);
-});
-
-module.exports = router;
+       
