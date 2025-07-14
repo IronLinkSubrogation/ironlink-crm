@@ -9,37 +9,43 @@ const DOCUMENTS_FILE = path.join(__dirname, '..', 'data', 'documents.json');
 
 router.get('/', (req, res) => {
   const searchQuery = req.query.q?.toLowerCase() || '';
+  const selectedTag = req.query.tag || '';
 
   const highlight = (text) => {
     if (!searchQuery || typeof text !== 'string') return text;
     return text.replace(new RegExp(`(${searchQuery})`, 'gi'), '<mark>$1</mark>');
   };
 
-  // Filter and sort clients
   const allClients = JSON.parse(fs.readFileSync(CLIENTS_FILE, 'utf-8'));
   const filteredClients = allClients.filter(c =>
-    c.clientName.toLowerCase().includes(searchQuery) ||
-    c.clientEmail.toLowerCase().includes(searchQuery) ||
-    c.clientTag.toLowerCase().includes(searchQuery) ||
-    (c.notes || '').toLowerCase().includes(searchQuery)
+    (selectedTag === '' || c.clientTag === selectedTag) &&
+    (
+      c.clientName.toLowerCase().includes(searchQuery) ||
+      c.clientEmail.toLowerCase().includes(searchQuery) ||
+      c.clientTag.toLowerCase().includes(searchQuery) ||
+      (c.notes || '').toLowerCase().includes(searchQuery)
+    )
   ).sort((a, b) => b.timestamp - a.timestamp);
 
-  // Filter and sort claims
   const allClaims = JSON.parse(fs.readFileSync(CLAIMS_FILE, 'utf-8'));
   const filteredClaims = allClaims.filter(c =>
-    c.claimNumber.toLowerCase().includes(searchQuery) ||
-    c.clientTag.toLowerCase().includes(searchQuery) ||
-    c.lossDate.toLowerCase().includes(searchQuery) ||
-    (c.claimNotes || '').toLowerCase().includes(searchQuery)
+    (selectedTag === '' || c.clientTag === selectedTag) &&
+    (
+      c.claimNumber.toLowerCase().includes(searchQuery) ||
+      c.clientTag.toLowerCase().includes(searchQuery) ||
+      c.lossDate.toLowerCase().includes(searchQuery) ||
+      (c.claimNotes || '').toLowerCase().includes(searchQuery)
+    )
   ).sort((a, b) => b.timestamp - a.timestamp);
 
-  // Filter and sort documents
   const allDocs = JSON.parse(fs.readFileSync(DOCUMENTS_FILE, 'utf-8'));
   const filteredDocs = allDocs.filter(d =>
-    d.documentName.toLowerCase().includes(searchQuery) ||
-    d.associatedClaim.toLowerCase().includes(searchQuery) ||
-    d.documentType.toLowerCase().includes(searchQuery) ||
-    (d.documentNotes || '').toLowerCase().includes(searchQuery)
+    (
+      d.documentName.toLowerCase().includes(searchQuery) ||
+      d.associatedClaim.toLowerCase().includes(searchQuery) ||
+      d.documentType.toLowerCase().includes(searchQuery) ||
+      (d.documentNotes || '').toLowerCase().includes(searchQuery)
+    )
   ).sort((a, b) => b.timestamp - a.timestamp);
 
   let html = `
@@ -61,8 +67,19 @@ router.get('/', (req, res) => {
 
       <form method="GET" action="/dashboard" style="margin-top:20px;">
         <label for="search">🔍 Search All Entries:</label>
-        <input type="text" id="search" name="q" value="${searchQuery}" placeholder="Search clients, claims, documents..." />
-        <button type="submit">Search</button>
+        <input type="text" id="search" name="q" value="${searchQuery}" placeholder="Search by name, email, tag..." />
+
+        <label for="tag" style="margin-left:20px;">🏷️ Filter by Tag:</label>
+        <select name="tag" id="tag">
+          <option value="">All Tags</option>
+          <option value="StateFarm"${selectedTag === 'StateFarm' ? ' selected' : ''}>StateFarm</option>
+          <option value="Allianz"${selectedTag === 'Allianz' ? ' selected' : ''}>Allianz</option>
+          <option value="LibertyMutual"${selectedTag === 'LibertyMutual' ? ' selected' : ''}>LibertyMutual</option>
+          <option value="Geico"${selectedTag === 'Geico' ? ' selected' : ''}>Geico</option>
+          <!-- Add other tags here if needed -->
+        </select>
+
+        <button type="submit" style="margin-left:20px;">Apply</button>
       </form>
 
       <h2>📁 Clients</h2>
