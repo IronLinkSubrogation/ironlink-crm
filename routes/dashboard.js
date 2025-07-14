@@ -59,10 +59,13 @@ router.get('/', (req, res) => {
     </head>
     <body>
       <h1>📊 IronLink CRM Dashboard</h1>
-      <nav>
+      <nav style="margin-bottom:20px;">
         <a href="/clients">Submit Client</a>
         <a href="/claims">Submit Claim</a>
         <a href="/documents">Submit Document</a>
+        <a href="/export/clients" class="export-button">📁 Export Clients CSV</a>
+        <a href="/export/claims" class="export-button">🧾 Export Claims CSV</a>
+        <a href="/export/documents" class="export-button">📎 Export Documents CSV</a>
       </nav>
 
       <form method="GET" action="/dashboard" style="margin-top:20px;">
@@ -76,7 +79,6 @@ router.get('/', (req, res) => {
           <option value="Allianz"${selectedTag === 'Allianz' ? ' selected' : ''}>Allianz</option>
           <option value="LibertyMutual"${selectedTag === 'LibertyMutual' ? ' selected' : ''}>LibertyMutual</option>
           <option value="Geico"${selectedTag === 'Geico' ? ' selected' : ''}>Geico</option>
-          <!-- Add other tags here if needed -->
         </select>
 
         <button type="submit" style="margin-left:20px;">Apply</button>
