@@ -12,9 +12,11 @@ app.use(express.urlencoded({ extended: true }));
 // ✅ Backend Routes
 const clientsRoute = require('./routes/clients');
 const claimsRoute = require('./routes/claims');
+const documentsRoute = require('./routes/documents');
 
 app.use('/clients', clientsRoute);
 app.use('/claims', claimsRoute);
+app.use('/documents', documentsRoute);
 
 // Root test route
 app.get('/', (req, res) => {
