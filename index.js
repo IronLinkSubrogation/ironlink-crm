@@ -9,11 +9,14 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Wire backend route for client intake
+// ✅ Backend Routes
 const clientsRoute = require('./routes/clients');
-app.use('/clients', clientsRoute);
+const claimsRoute = require('./routes/claims');
 
-// Test root route
+app.use('/clients', clientsRoute);
+app.use('/claims', claimsRoute);
+
+// Root test route
 app.get('/', (req, res) => {
   res.send('IronLink CRM is up and running!');
 });
