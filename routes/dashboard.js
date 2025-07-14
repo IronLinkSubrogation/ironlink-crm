@@ -1,5 +1,5 @@
 // Route: /dashboard
-// Reads client entries from /data/clients.json and displays them as HTML
+// Displays submitted clients, sorted by most recent first
 
 const express = require('express');
 const fs = require('fs');
@@ -8,9 +8,11 @@ const router = express.Router();
 
 const CLIENTS_FILE = path.join(__dirname, '..', 'data', 'clients.json');
 
-// Route to display stored clients
 router.get('/', (req, res) => {
   const clients = JSON.parse(fs.readFileSync(CLIENTS_FILE, 'utf-8'));
+
+  // 🔽 Sort clients by timestamp (newest first)
+  const sortedClients = clients.sort((a, b) => b.timestamp - a.timestamp);
 
   let html = `
     <!DOCTYPE html>
@@ -31,7 +33,7 @@ router.get('/', (req, res) => {
       <hr />
   `;
 
-  clients.forEach((client, index) => {
+  sortedClients.forEach((client, index) => {
     html += `
       <div style="margin-bottom: 20px;">
         <strong>${index + 1}. ${client.clientName}</strong><br />
