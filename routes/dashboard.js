@@ -63,9 +63,9 @@ router.get('/', (req, res) => {
         <a href="/clients">Submit Client</a>
         <a href="/claims">Submit Claim</a>
         <a href="/documents">Submit Document</a>
-        <a href="/export/clients" class="export-button">📁 Export Clients CSV</a>
-        <a href="/export/claims" class="export-button">🧾 Export Claims CSV</a>
-        <a href="/export/documents" class="export-button">📎 Export Documents CSV</a>
+        <a href="/export/clients${selectedTag ? `?tag=${selectedTag}` : ''}" class="export-button">📁 Export Clients CSV</a>
+        <a href="/export/claims${selectedTag ? `?tag=${selectedTag}` : ''}" class="export-button">🧾 Export Claims CSV</a>
+        <a href="/export/documents${selectedTag ? `?tag=${selectedTag}` : ''}" class="export-button">📎 Export Documents CSV</a>
       </nav>
 
       <form method="GET" action="/dashboard" style="margin-top:20px;">
