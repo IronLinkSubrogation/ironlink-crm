@@ -23,7 +23,7 @@ form {
   padding: 20px 30px;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0,0,0,0.05);
-  max-width: 500px;
+  max-width: 600px;
   margin-top: 20px;
 }
 
@@ -33,7 +33,7 @@ label {
   font-weight: 600;
 }
 
-input, textarea {
+input, textarea, select {
   width: 100%;
   padding: 10px;
   margin-top: 5px;
@@ -58,12 +58,13 @@ button:hover {
   background-color: #0f59c3;
 }
 
+/* 🔗 Navigation & Dashboard Header */
 nav {
   margin-bottom: 20px;
 }
 
 nav a {
-  margin-right: 20px;
+  margin-right: 12px;
   color: #1a73e8;
   text-decoration: none;
   font-weight: 500;
@@ -97,4 +98,22 @@ mark {
   background-color: #fffd75;
   padding: 0 2px;
   border-radius: 3px;
+}
+
+/* 📤 Export Button Styling */
+.export-button {
+  display: inline-block;
+  margin-left: 12px;
+  padding: 6px 12px;
+  background-color: #f1f3f4;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-decoration: none;
+  color: #333;
+  font-size: 0.95em;
+  transition: background 0.2s ease;
+}
+
+.export-button:hover {
+  background-color: #e0e0e0;
 }
