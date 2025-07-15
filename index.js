@@ -9,7 +9,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Multer setup
+// Multer Setup
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadPath = path.join(__dirname, 'public', 'uploads');
@@ -22,7 +22,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Handle document upload
+// 📁 Document Upload Route
 app.post('/documents', upload.single('document'), (req, res) => {
   const fileData = {
     filename: req.file.filename,
@@ -44,7 +44,7 @@ app.post('/documents', upload.single('document'), (req, res) => {
   res.redirect('/dashboard.html');
 });
 
-// Handle claim intake
+// 📝 Claim Intake Route
 app.post('/claims', (req, res) => {
   const claimData = {
     client: req.body.client,
@@ -67,7 +67,20 @@ app.post('/claims', (req, res) => {
   res.send('Claim submitted successfully.');
 });
 
-// Start the server
+// 👤 Clients Data Route
+app.get('/clients', (req, res) => {
+  const clientsFile = path.join(__dirname, 'data', 'clients.json');
+  fs.mkdirSync(path.dirname(clientsFile), { recursive: true });
+
+  let clients = [];
+  if (fs.existsSync(clientsFile)) {
+    clients = JSON.parse(fs.readFileSync(clientsFile));
+  }
+
+  res.json(clients);
+});
+
+// 🚀 Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`IronLink CRM running at http://localhost:${PORT}`);
