@@ -6,26 +6,44 @@
 </head>
 <body>
   <h1>Registered Clients</h1>
+
+  <input type="text" id="search" placeholder="Search by client name..." />
   <ul id="clients-list"></ul>
 
   <script>
+    let allClients = [];
+
     fetch('/clients')
       .then(response => response.json())
       .then(data => {
-        const list = document.getElementById('clients-list');
-        data.forEach(client => {
-          const item = document.createElement('li');
-          item.innerHTML = `
-            <strong>${client.name}</strong><br>
-            📧 ${client.contactEmail}<br>
-            📞 ${client.contactPhone}<br>
-            👤 Account Manager: ${client.accountManager}<br>
-            📅 Joined: ${new Date(client.joinedOn).toLocaleDateString()}
-            <hr>
-          `;
-          list.appendChild(item);
-        });
+        allClients = data;
+        displayClients(data);
       });
+
+    function displayClients(clients) {
+      const list = document.getElementById('clients-list');
+      list.innerHTML = '';
+      clients.forEach(client => {
+        const item = document.createElement('li');
+        item.innerHTML = `
+          <strong>${client.name}</strong><br>
+          📧 ${client.contactEmail}<br>
+          📞 ${client.contactPhone}<br>
+          👤 Account Manager: ${client.accountManager}<br>
+          📅 Joined: ${new Date(client.joinedOn).toLocaleDateString()}
+          <hr>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    document.getElementById('search').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const filtered = allClients.filter(client =>
+        client.name.toLowerCase().includes(query)
+      );
+      displayClients(filtered);
+    });
   </script>
 </body>
 </html>
