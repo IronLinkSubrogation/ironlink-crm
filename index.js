@@ -8,21 +8,23 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 
-// 🧩 Backend Routes
+// 🧩 Route Imports
 const clientsRoute = require('./routes/clients');
 const claimsRoute = require('./routes/claims');
 const documentsRoute = require('./routes/documents');
 const dashboardRoute = require('./routes/dashboard');
-const exportRoute = require('./routes/export'); // ✅ CSV export support
+const exportRoute = require('./routes/export');           // ✅ CSV export with filters
+const pdfRoute = require('./routes/generate-pdf');        // ✅ PDF generation routes
 
 // 🔌 Wire Up Routes
 app.use('/clients', clientsRoute);
 app.use('/claims', claimsRoute);
 app.use('/documents', documentsRoute);
 app.use('/dashboard', dashboardRoute);
-app.use('/export', exportRoute); // ✅ Enables /export/clients etc.
+app.use('/export', exportRoute);
+app.use('/generate-pdf', pdfRoute);                       // ✅ Claim & client PDFs
 
-// 🩺 Health Check
+// 🩺 Health Check (basic root route)
 app.get('/', (req, res) => {
   res.send('🚀 IronLink CRM is live and running!');
 });
