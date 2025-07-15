@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>IronLink Dashboard</title>
+</head>
+<body>
+  <h1>Uploaded Documents</h1>
+  <ul id="documents-list"></ul>
+
+  <script>
+    fetch('/data/documents.json')
+      .then(response => response.json())
+      .then(data => {
+        const list = document.getElementById('documents-list');
+        data.forEach(doc => {
+          const item = document.createElement('li');
+          item.textContent = `${doc.originalName} — uploaded on ${new Date(doc.date).toLocaleString()}`;
+          list.appendChild(item);
+        });
+      });
+  </script>
+</body>
+</html>
