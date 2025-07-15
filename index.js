@@ -9,12 +9,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 🔧 Multer Setup for Uploads
+// 🔧 Multer Setup for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadPath = path.join(__dirname, 'public', 'uploads');
-    fs.mkdirSync(uploadPath, { recursive: true });
-    cb(null, uploadPath);
+    const uploadDir = path.join(__dirname, 'public', 'uploads');
+    fs.mkdirSync(uploadDir, { recursive: true });
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + '-' + file.originalname);
@@ -23,44 +23,9 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 /*===========================
-  POST: Upload Document
-===========================*/
-app.post('/documents', upload.single('document'), (req, res) => {
-  const fileData = {
-    filename: req.file.filename,
-    originalName: req.file.originalname,
-    date: new Date().toISOString(),
-    client: req.body.client || null,
-    claimNumber: req.body.claimNumber || null
-  };
-
-  const docsPath = path.join(__dirname, 'data', 'documents.json');
-  fs.mkdirSync(path.dirname(docsPath), { recursive: true });
-
-  let docs = [];
-  if (fs.existsSync(docsPath)) {
-    docs = JSON.parse(fs.readFileSync(docsPath));
-  }
-
-  docs.push(fileData);
-  fs.writeFileSync(docsPath, JSON.stringify(docs, null, 2));
-
-  res.redirect('/dashboard.html');
-});
-
-/*===========================
-  POST: Submit Claim
+  POST: Submit a new claim
 ===========================*/
 app.post('/claims', (req, res) => {
-  const claimData = {
-    client: req.body.client,
-    claimNumber: req.body.claimNumber,
-    description: req.body.description,
-    stage: req.body.stage,
-    notes: req.body.notes || "",
-    submittedAt: new Date().toISOString()
-  };
-
   const claimsPath = path.join(__dirname, 'data', 'claims.json');
   fs.mkdirSync(path.dirname(claimsPath), { recursive: true });
 
@@ -69,14 +34,76 @@ app.post('/claims', (req, res) => {
     claims = JSON.parse(fs.readFileSync(claimsPath));
   }
 
-  claims.push(claimData);
+  const newClaim = {
+    client: req.body.client,
+    claimNumber: req.body.claimNumber,
+    description: req.body.description,
+    stage: req.body.stage,
+    notes: req.body.notes || "",
+    submittedAt: new Date().toISOString()
+  };
+
+  claims.push(newClaim);
   fs.writeFileSync(claimsPath, JSON.stringify(claims, null, 2));
 
   res.send('Claim submitted successfully.');
 });
 
 /*===========================
-  GET: All Clients
+  POST: Update an existing claim
+===========================*/
+app.post('/claims/update', (req, res) => {
+  const claimsPath = path.join(__dirname, 'data', 'claims.json');
+  fs.mkdirSync(path.dirname(claimsPath), { recursive: true });
+
+  let claims = [];
+  if (fs.existsSync(claimsPath)) {
+    claims = JSON.parse(fs.readFileSync(claimsPath));
+  }
+
+  const index = claims.findIndex(c => c.claimNumber === req.body.claimNumber);
+
+  if (index === -1) {
+    return res.status(404).send('Claim not found.');
+  }
+
+  claims[index].description = req.body.description;
+  claims[index].stage = req.body.stage;
+  claims[index].notes = req.body.notes;
+  claims[index].updatedAt = new Date().toISOString();
+
+  fs.writeFileSync(claimsPath, JSON.stringify(claims, null, 2));
+  res.send('Claim updated successfully.');
+});
+
+/*===========================
+  POST: Upload a document
+===========================*/
+app.post('/documents', upload.single('document'), (req, res) => {
+  const documentsPath = path.join(__dirname, 'data', 'documents.json');
+  fs.mkdirSync(path.dirname(documentsPath), { recursive: true });
+
+  let documents = [];
+  if (fs.existsSync(documentsPath)) {
+    documents = JSON.parse(fs.readFileSync(documentsPath));
+  }
+
+  const fileData = {
+    filename: req.file.filename,
+    originalName: req.file.originalname,
+    date: new Date().toISOString(),
+    client: req.body.client || null,
+    claimNumber: req.body.claimNumber || null
+  };
+
+  documents.push(fileData);
+  fs.writeFileSync(documentsPath, JSON.stringify(documents, null, 2));
+
+  res.redirect('/dashboard.html');
+});
+
+/*===========================
+  GET: All clients
 ===========================*/
 app.get('/clients', (req, res) => {
   const clientsPath = path.join(__dirname, 'data', 'clients.json');
@@ -91,7 +118,7 @@ app.get('/clients', (req, res) => {
 });
 
 /*===========================
-  GET: Claims — Filter by client and/or stage
+  GET: Claims (filtered by client and/or stage)
 ===========================*/
 app.get('/claims', (req, res) => {
   const clientName = req.query.client;
@@ -120,25 +147,25 @@ app.get('/claims', (req, res) => {
 });
 
 /*===========================
-  GET: Documents — Filter by client
+  GET: Documents (filtered by client)
 ===========================*/
 app.get('/documents', (req, res) => {
   const clientName = req.query.client;
   const docsPath = path.join(__dirname, 'data', 'documents.json');
   fs.mkdirSync(path.dirname(docsPath), { recursive: true });
 
-  let docs = [];
+  let documents = [];
   if (fs.existsSync(docsPath)) {
-    docs = JSON.parse(fs.readFileSync(docsPath));
+    documents = JSON.parse(fs.readFileSync(docsPath));
   }
 
-  if (!clientName) return res.json(docs);
+  if (!clientName) return res.json(documents);
 
-  const filtered = docs.filter(doc =>
+  const filteredDocs = documents.filter(doc =>
     doc.client && doc.client.toLowerCase() === clientName.toLowerCase()
   );
 
-  res.json(filtered);
+  res.json(filteredDocs);
 });
 
 /*===========================
