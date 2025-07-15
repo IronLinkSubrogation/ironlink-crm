@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Claim Intake</title>
+</head>
+<body>
+  <h1>Submit New Claim</h1>
+  <form action="/claims" method="POST">
+    <label>Client Name:</label><br>
+    <input type="text" name="client" required><br><br>
+
+    <label>Claim Number:</label><br>
+    <input type="text" name="claimNumber" required><br><br>
+
+    <label>Claim Description:</label><br>
+    <textarea name="description" rows="4" cols="50" required></textarea><br><br>
+
+    <button type="submit">Submit Claim</button>
+  </form>
+</body>
+</html>
