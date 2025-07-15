@@ -6,13 +6,33 @@
 </head>
 <body>
   <h1>Client Profile</h1>
-  <p>This page will dynamically show client data like:</p>
-  <ul>
-    <li>Client Name</li>
-    <li>Open Claims</li>
-    <li>Uploaded Documents</li>
-    <li>Contact Information</li>
-  </ul>
-  <p>Eventually, this will support unique URLs per client — like <code>/client?name=AcmeInsurance</code>.</p>
+  <div id="profile"></div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const clientName = params.get('name');
+
+    if (!clientName) {
+      document.getElementById('profile').innerHTML = '<p>No client specified.</p>';
+    } else {
+      fetch('/clients')
+        .then(response => response.json())
+        .then(data => {
+          const client = data.find(c => c.name.toLowerCase() === clientName.toLowerCase());
+          if (!client) {
+            document.getElementById('profile').innerHTML = `<p>No client found for: ${clientName}</p>`;
+            return;
+          }
+
+          document.getElementById('profile').innerHTML = `
+            <h2>${client.name}</h2>
+            <p>📧 <strong>Email:</strong> ${client.contactEmail}</p>
+            <p>📞 <strong>Phone:</strong> ${client.contactPhone}</p>
+            <p>👤 <strong>Account Manager:</strong> ${client.accountManager}</p>
+            <p>📅 <strong>Joined:</strong> ${new Date(client.joinedOn).toLocaleDateString()}</p>
+          `;
+        });
+    }
+  </script>
 </body>
 </html>
