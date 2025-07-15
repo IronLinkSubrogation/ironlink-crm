@@ -7,8 +7,8 @@
 <body>
   <h1>Submit New Claim</h1>
   <form action="/claims" method="POST">
-    <label>Client Name:</label><br>
-    <input type="text" name="client" required><br><br>
+    <label>Select Client:</label><br>
+    <select name="client" id="client-select" required></select><br><br>
 
     <label>Claim Number:</label><br>
     <input type="text" name="claimNumber" required><br><br>
@@ -18,5 +18,20 @@
 
     <button type="submit">Submit Claim</button>
   </form>
+
+  <script>
+    // Populate dropdown with client names
+    fetch('/clients')
+      .then(res => res.json())
+      .then(data => {
+        const select = document.getElementById('client-select');
+        data.forEach(client => {
+          const option = document.createElement('option');
+          option.value = client.name;
+          option.textContent = client.name;
+          select.appendChild(option);
+        });
+      });
+  </script>
 </body>
 </html>
