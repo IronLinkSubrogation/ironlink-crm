@@ -9,7 +9,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 📂 Multer Setup for Uploads
+// 🔧 Multer: Setup for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadPath = path.join(__dirname, 'public', 'uploads');
@@ -22,13 +22,14 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// 📝 POST: Submit a new claim
+// 📥 POST: Submit new claim with stage + notes
 app.post('/claims', (req, res) => {
   const claimData = {
     client: req.body.client,
     claimNumber: req.body.claimNumber,
     description: req.body.description,
     stage: req.body.stage,
+    notes: req.body.notes || "",
     submittedAt: new Date().toISOString()
   };
 
@@ -83,7 +84,7 @@ app.get('/clients', (req, res) => {
   res.json(clients);
 });
 
-// 📊 GET: Claims (Optionally filtered by client)
+// 📊 GET: Claims (optionally filtered by client name)
 app.get('/claims', (req, res) => {
   const clientName = req.query.client;
   const claimsFile = path.join(__dirname, 'data', 'claims.json');
@@ -94,18 +95,16 @@ app.get('/claims', (req, res) => {
     claims = JSON.parse(fs.readFileSync(claimsFile));
   }
 
-  if (!clientName) {
-    return res.json(claims);
-  }
+  if (!clientName) return res.json(claims);
 
-  const filtered = claims.filter(claim =>
-    claim.client.toLowerCase() === clientName.toLowerCase()
+  const filtered = claims.filter(c =>
+    c.client.toLowerCase() === clientName.toLowerCase()
   );
 
   res.json(filtered);
 });
 
-// 📂 GET: Documents (Optionally filtered by client)
+// 📂 GET: Documents (optionally filtered by client name)
 app.get('/documents', (req, res) => {
   const clientName = req.query.client;
   const documentsFile = path.join(__dirname, 'data', 'documents.json');
@@ -116,9 +115,7 @@ app.get('/documents', (req, res) => {
     documents = JSON.parse(fs.readFileSync(documentsFile));
   }
 
-  if (!clientName) {
-    return res.json(documents);
-  }
+  if (!clientName) return res.json(documents);
 
   const filtered = documents.filter(doc =>
     doc.client && doc.client.toLowerCase() === clientName.toLowerCase()
@@ -127,7 +124,7 @@ app.get('/documents', (req, res) => {
   res.json(filtered);
 });
 
-// 🚀 Launch the server
+// 🚀 Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`IronLink CRM running at http://localhost:${PORT}`);
