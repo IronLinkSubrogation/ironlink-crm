@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IronLink Analytics</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f4f6f8;
+    }
+    h1 {
+      color: #333;
+    }
+    canvas {
+      margin-top: 30px;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #prompt {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 IronLink Analytics Dashboard</h1>
+
+  <div id="prompt">
+    <label for="adminKey">Enter Admin Key:</label>
+    <input type="password" id="adminKey" />
+    <button onclick="loadAnalytics()">View Analytics</button>
+  </div>
+
+  <canvas id="stageChart" width="600" height="300"></canvas>
+  <canvas id="clientChart" width="600" height="300"></canvas>
+  <canvas id="weekChart" width="600" height="300"></canvas>
+
+  <script>
+    async function loadAnalytics() {
+      const key = document.getElementById('adminKey').value;
+      const res = await fetch(`/analytics?adminKey=${key}`);
+      if (!res.ok) {
+        alert('Access Denied. Invalid Admin Key.');
+        return;
+      }
+      const data = await res.json();
+      renderCharts(data);
+    }
+
+    function renderCharts(data) {
+      const stageCtx = document.getElementById('stageChart').getContext('2d');
+      new Chart(stageCtx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(data.byStage),
+          datasets: [{
+            label: 'Claims by Stage',
+            data: Object.values(data.byStage),
+            backgroundColor: '#4a90e2'
+          }]
+        }
+      });
+
+      const clientCtx = document.getElementById('clientChart').getContext('2d');
+      new Chart(clientCtx, {
+        type: 'pie',
+        data: {
+          labels: Object.keys(data.byClient),
+          datasets: [{
+            label: 'Claims by Client',
+            data: Object.values(data.byClient),
+            backgroundColor: ['#6dd5fa','#4a90e2','#2c3e50','#1abc9c','#9b59b6']
+          }]
+        }
+      });
+
+      const weekCtx = document.getElementById('weekChart').getContext('2d');
+      new Chart(weekCtx, {
+        type: 'line',
+        data: {
+          labels: Object.keys(data.byWeek),
+          datasets: [{
+            label: 'Claims by Week',
+            data: Object.values(data.byWeek),
+            borderColor: '#2c3e50',
+            fill: false,
+            tension: 0.3
+          }]
+        }
+      });
+    }
+  </script>
+</body>
+</html>
