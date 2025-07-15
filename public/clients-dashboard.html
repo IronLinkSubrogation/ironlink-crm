@@ -13,6 +13,7 @@
   <script>
     let allClients = [];
 
+    // Fetch clients data from the backend
     fetch('/clients')
       .then(response => response.json())
       .then(data => {
@@ -20,13 +21,18 @@
         displayClients(data);
       });
 
+    // Render client list with clickable names
     function displayClients(clients) {
       const list = document.getElementById('clients-list');
       list.innerHTML = '';
       clients.forEach(client => {
         const item = document.createElement('li');
         item.innerHTML = `
-          <strong>${client.name}</strong><br>
+          <strong>
+            <a href="/client-profile.html?name=${encodeURIComponent(client.name)}">
+              ${client.name}
+            </a>
+          </strong><br>
           📧 ${client.contactEmail}<br>
           📞 ${client.contactPhone}<br>
           👤 Account Manager: ${client.accountManager}<br>
@@ -37,6 +43,7 @@
       });
     }
 
+    // Live client name search
     document.getElementById('search').addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase();
       const filtered = allClients.filter(client =>
