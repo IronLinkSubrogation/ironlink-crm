@@ -13,8 +13,9 @@ const clientsRoute = require('./routes/clients');
 const claimsRoute = require('./routes/claims');
 const documentsRoute = require('./routes/documents');
 const dashboardRoute = require('./routes/dashboard');
-const exportRoute = require('./routes/export');           // ✅ CSV export with filters
-const pdfRoute = require('./routes/generate-pdf');        // ✅ PDF generation routes
+const exportRoute = require('./routes/export');
+const pdfRoute = require('./routes/generate-pdf');
+const healthRoute = require('./routes/health');         // ✅ Step 34 — Health Check
 
 // 🔌 Wire Up Routes
 app.use('/clients', clientsRoute);
@@ -22,9 +23,10 @@ app.use('/claims', claimsRoute);
 app.use('/documents', documentsRoute);
 app.use('/dashboard', dashboardRoute);
 app.use('/export', exportRoute);
-app.use('/generate-pdf', pdfRoute);                       // ✅ Claim & client PDFs
+app.use('/generate-pdf', pdfRoute);
+app.use('/health', healthRoute);                        // ✅ Now registered
 
-// 🩺 Health Check (basic root route)
+// 🩺 Root Check
 app.get('/', (req, res) => {
   res.send('🚀 IronLink CRM is live and running!');
 });
