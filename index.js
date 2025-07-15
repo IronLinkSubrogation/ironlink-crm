@@ -22,7 +22,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Routes
+// Handle document upload
 app.post('/documents', upload.single('document'), (req, res) => {
   const fileData = {
     filename: req.file.filename,
@@ -41,14 +41,33 @@ app.post('/documents', upload.single('document'), (req, res) => {
   data.push(fileData);
   fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
 
-  res.redirect('/dashboard');
+  res.redirect('/dashboard.html');
 });
 
-app.get('/dashboard', (req, res) => {
-  res.send('Dashboard placeholder — will show uploaded docs.');
+// Handle claim intake
+app.post('/claims', (req, res) => {
+  const claimData = {
+    client: req.body.client,
+    claimNumber: req.body.claimNumber,
+    description: req.body.description,
+    submittedAt: new Date().toISOString()
+  };
+
+  const claimsFile = path.join(__dirname, 'data', 'claims.json');
+  fs.mkdirSync(path.dirname(claimsFile), { recursive: true });
+
+  let claims = [];
+  if (fs.existsSync(claimsFile)) {
+    claims = JSON.parse(fs.readFileSync(claimsFile));
+  }
+
+  claims.push(claimData);
+  fs.writeFileSync(claimsFile, JSON.stringify(claims, null, 2));
+
+  res.send('Claim submitted successfully.');
 });
 
-// Start server
+// Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`IronLink CRM running at http://localhost:${PORT}`);
