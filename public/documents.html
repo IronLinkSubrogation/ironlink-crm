@@ -10,6 +10,9 @@
     <label>Select Client:</label><br>
     <select name="client" id="client-select" required></select><br><br>
 
+    <label>Associated Claim Number (optional):</label><br>
+    <input type="text" name="claimNumber"><br><br>
+
     <label>Choose File:</label><br>
     <input type="file" name="document" required><br><br>
 
@@ -17,7 +20,6 @@
   </form>
 
   <script>
-    // Load clients into dropdown
     fetch('/clients')
       .then(res => res.json())
       .then(data => {
