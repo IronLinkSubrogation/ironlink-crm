@@ -1,3 +1,5 @@
+require('dotenv').config(); // Enables .env file usage
+
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
@@ -11,12 +13,21 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Multer setup for file uploads
+// 🛡️ Admin Key Check
+function checkAdminKey(req, res, next) {
+  const key = req.query.adminKey;
+  if (key !== process.env.ADMIN_KEY) {
+    return res.status(403).send('Access denied.');
+  }
+  next();
+}
+
+// 🔧 Multer: File upload setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, 'public', 'uploads');
-    fs.mkdirSync(uploadDir, { recursive: true });
-    cb(null, uploadDir);
+    const uploadPath = path.join(__dirname, 'public', 'uploads');
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + '-' + file.originalname);
@@ -24,16 +35,14 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-/* ===========================
-   POST: Submit New Claim
-=========================== */
+/*===========================
+  POST: Submit New Claim
+===========================*/
 app.post('/claims', (req, res) => {
   const claimsPath = path.join(__dirname, 'data', 'claims.json');
   fs.mkdirSync(path.dirname(claimsPath), { recursive: true });
 
-  let claims = fs.existsSync(claimsPath)
-    ? JSON.parse(fs.readFileSync(claimsPath))
-    : [];
+  let claims = fs.existsSync(claimsPath) ? JSON.parse(fs.readFileSync(claimsPath)) : [];
 
   claims.push({
     client: req.body.client,
@@ -48,16 +57,14 @@ app.post('/claims', (req, res) => {
   res.send('Claim submitted successfully.');
 });
 
-/* ===========================
-   POST: Update Existing Claim
-=========================== */
-app.post('/claims/update', (req, res) => {
+/*===========================
+  POST: Update Claim
+===========================*/
+app.post('/claims/update', checkAdminKey, (req, res) => {
   const claimsPath = path.join(__dirname, 'data', 'claims.json');
   fs.mkdirSync(path.dirname(claimsPath), { recursive: true });
 
-  let claims = fs.existsSync(claimsPath)
-    ? JSON.parse(fs.readFileSync(claimsPath))
-    : [];
+  let claims = fs.existsSync(claimsPath) ? JSON.parse(fs.readFileSync(claimsPath)) : [];
 
   const index = claims.findIndex(c => c.claimNumber === req.body.claimNumber);
   if (index === -1) return res.status(404).send('Claim not found.');
@@ -71,18 +78,16 @@ app.post('/claims/update', (req, res) => {
   res.send('Claim updated successfully.');
 });
 
-/* ===========================
-   POST: Upload Document
-=========================== */
+/*===========================
+  POST: Upload Document
+===========================*/
 app.post('/documents', upload.single('document'), (req, res) => {
   const docsPath = path.join(__dirname, 'data', 'documents.json');
   fs.mkdirSync(path.dirname(docsPath), { recursive: true });
 
-  let documents = fs.existsSync(docsPath)
-    ? JSON.parse(fs.readFileSync(docsPath))
-    : [];
+  let docs = fs.existsSync(docsPath) ? JSON.parse(fs.readFileSync(docsPath)) : [];
 
-  documents.push({
+  docs.push({
     filename: req.file.filename,
     originalName: req.file.originalname,
     date: new Date().toISOString(),
@@ -90,82 +95,63 @@ app.post('/documents', upload.single('document'), (req, res) => {
     claimNumber: req.body.claimNumber || null
   });
 
-  fs.writeFileSync(docsPath, JSON.stringify(documents, null, 2));
+  fs.writeFileSync(docsPath, JSON.stringify(docs, null, 2));
   res.redirect('/dashboard.html');
 });
 
-/* ===========================
-   GET: All Clients
-=========================== */
+/*===========================
+  GET: All Clients
+===========================*/
 app.get('/clients', (req, res) => {
   const clientsPath = path.join(__dirname, 'data', 'clients.json');
   fs.mkdirSync(path.dirname(clientsPath), { recursive: true });
 
-  const clients = fs.existsSync(clientsPath)
-    ? JSON.parse(fs.readFileSync(clientsPath))
-    : [];
-
+  const clients = fs.existsSync(clientsPath) ? JSON.parse(fs.readFileSync(clientsPath)) : [];
   res.json(clients);
 });
 
-/* ===========================
-   GET: Claims (Filtered)
-=========================== */
+/*===========================
+  GET: Filtered Claims
+===========================*/
 app.get('/claims', (req, res) => {
   const client = req.query.client?.toLowerCase();
   const stage = req.query.stage?.toLowerCase();
   const claimsPath = path.join(__dirname, 'data', 'claims.json');
   fs.mkdirSync(path.dirname(claimsPath), { recursive: true });
 
-  let claims = fs.existsSync(claimsPath)
-    ? JSON.parse(fs.readFileSync(claimsPath))
-    : [];
+  let claims = fs.existsSync(claimsPath) ? JSON.parse(fs.readFileSync(claimsPath)) : [];
 
-  if (client) {
-    claims = claims.filter(c => c.client?.toLowerCase() === client);
-  }
-
-  if (stage) {
-    claims = claims.filter(c => c.stage?.toLowerCase() === stage);
-  }
+  if (client) claims = claims.filter(c => c.client?.toLowerCase() === client);
+  if (stage) claims = claims.filter(c => c.stage?.toLowerCase() === stage);
 
   res.json(claims);
 });
 
-/* ===========================
-   GET: Documents (Filtered)
-=========================== */
+/*===========================
+  GET: Filtered Documents
+===========================*/
 app.get('/documents', (req, res) => {
   const client = req.query.client?.toLowerCase();
   const docsPath = path.join(__dirname, 'data', 'documents.json');
   fs.mkdirSync(path.dirname(docsPath), { recursive: true });
 
-  let documents = fs.existsSync(docsPath)
-    ? JSON.parse(fs.readFileSync(docsPath))
-    : [];
+  let documents = fs.existsSync(docsPath) ? JSON.parse(fs.readFileSync(docsPath)) : [];
 
-  if (client) {
-    documents = documents.filter(doc => doc.client?.toLowerCase() === client);
-  }
+  if (client) documents = documents.filter(doc => doc.client?.toLowerCase() === client);
 
   res.json(documents);
 });
 
-/* ===========================
-   GET: Export Claims as CSV
-=========================== */
-app.get('/claims/export', (req, res) => {
+/*===========================
+  GET: Export Claims as CSV
+===========================*/
+app.get('/claims/export', checkAdminKey, (req, res) => {
   const client = req.query.client?.toLowerCase();
   const claimsPath = path.join(__dirname, 'data', 'claims.json');
   fs.mkdirSync(path.dirname(claimsPath), { recursive: true });
 
-  let claims = fs.existsSync(claimsPath)
-    ? JSON.parse(fs.readFileSync(claimsPath))
-    : [];
-
-  if (client) {
-    claims = claims.filter(c => c.client?.toLowerCase() === client);
-  }
+  let claims = fs.existsSync(claimsPath) ? JSON.parse(fs.readFileSync(claimsPath)) : [];
+  if (client) claims = claims.filter(c => c.client?.toLowerCase() === client);
 
   const csv = stringify(claims, { header: true });
   res.setHeader('Content-Disposition', 'attachment; filename=claims.csv');
@@ -173,21 +159,16 @@ app.get('/claims/export', (req, res) => {
   res.send(csv);
 });
 
-/* ===========================
-   GET: Export Documents as CSV
-=========================== */
-app.get('/documents/export', (req, res) => {
+/*===========================
+  GET: Export Documents as CSV
+===========================*/
+app.get('/documents/export', checkAdminKey, (req, res) => {
   const client = req.query.client?.toLowerCase();
   const docsPath = path.join(__dirname, 'data', 'documents.json');
   fs.mkdirSync(path.dirname(docsPath), { recursive: true });
 
-  let documents = fs.existsSync(docsPath)
-    ? JSON.parse(fs.readFileSync(docsPath))
-    : [];
-
-  if (client) {
-    documents = documents.filter(doc => doc.client?.toLowerCase() === client);
-  }
+  let documents = fs.existsSync(docsPath) ? JSON.parse(fs.readFileSync(docsPath)) : [];
+  if (client) documents = documents.filter(doc => doc.client?.toLowerCase() === client);
 
   const csv = stringify(documents, { header: true });
   res.setHeader('Content-Disposition', 'attachment; filename=documents.csv');
@@ -195,21 +176,16 @@ app.get('/documents/export', (req, res) => {
   res.send(csv);
 });
 
-/* ===========================
-   GET: Archive Recovered Claims
-=========================== */
-app.get('/claims/archive', (req, res) => {
+/*===========================
+  GET: Archive Recovered Claims
+===========================*/
+app.get('/claims/archive', checkAdminKey, (req, res) => {
   const claimsPath = path.join(__dirname, 'data', 'claims.json');
   const archivePath = path.join(__dirname, 'data', 'archived-claims.json');
   fs.mkdirSync(path.dirname(claimsPath), { recursive: true });
 
-  let claims = fs.existsSync(claimsPath)
-    ? JSON.parse(fs.readFileSync(claimsPath))
-    : [];
-
-  let archived = fs.existsSync(archivePath)
-    ? JSON.parse(fs.readFileSync(archivePath))
-    : [];
+  let claims = fs.existsSync(claimsPath) ? JSON.parse(fs.readFileSync(claimsPath)) : [];
+  let archived = fs.existsSync(archivePath) ? JSON.parse(fs.readFileSync(archivePath)) : [];
 
   const active = [];
   const toArchive = [];
@@ -228,9 +204,9 @@ app.get('/claims/archive', (req, res) => {
   res.send(`Archived ${toArchive.length} recovered claim(s).`);
 });
 
-/* ===========================
-   Start Server
-=========================== */
+/*===========================
+  Start the Server
+===========================*/
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`IronLink CRM running at http://localhost:${PORT}`);
