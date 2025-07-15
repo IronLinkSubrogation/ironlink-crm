@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Claim</title>
+</head>
+<body>
+  <h1>Edit Claim</h1>
+  <div id="form-container"></div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const claimNumber = params.get('claimNumber');
+    const container = document.getElementById('form-container');
+
+    if (!claimNumber) {
+      container.innerHTML = '<p>No claim number provided.</p>';
+      throw new Error('Missing claimNumber');
+    }
+
+    fetch('/claims')
+      .then(res => res.json())
+      .then(claims => {
+        const claim = claims.find(c => c.claimNumber === claimNumber);
+
+        if (!claim) {
+          container.innerHTML = '<p>Claim not found.</p>';
+          return;
+        }
+
+        container.innerHTML = `
+          <form action="/claims/update" method="POST">
+            <input type="hidden" name="claimNumber" value="${claim.claimNumber}">
+
+            <label>Client:</label><br>
+            <input type="text" name="client" value="${claim.client}" readonly><br><br>
+
+            <label>Description:</label><br>
+            <textarea name="description" rows="3">${claim.description}</textarea><br><br>
+
+            <label>Stage:</label><br>
+            <select name="stage">
+              <option value="Open" ${claim.stage === "Open" ? "selected" : ""}>Open</option>
+              <option value="In Progress" ${claim.stage === "In Progress" ? "selected" : ""}>In Progress</option>
+              <option value="Recovered" ${claim.stage === "Recovered" ? "selected" : ""}>Recovered</option>
+            </select><br><br>
+
+            <label>Notes:</label><br>
+            <textarea name="notes" rows="4">${claim.notes}</textarea><br><br>
+
+            <button type="submit">Update Claim</button>
+          </form>
+        `;
+      });
+  </script>
+</body>
+</html>
