@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Claims Dashboard</title>
+</head>
+<body>
+  <h1>Submitted Claims</h1>
+  <ul id="claims-list"></ul>
+
+  <script>
+    fetch('/data/claims.json')
+      .then(response => response.json())
+      .then(data => {
+        const list = document.getElementById('claims-list');
+        data.forEach(claim => {
+          const item = document.createElement('li');
+          item.textContent = `${claim.client} | Claim #${claim.claimNumber} — ${claim.description} [${new Date(claim.submittedAt).toLocaleString()}]`;
+          list.appendChild(item);
+        });
+      });
+  </script>
+</body>
+</html>
