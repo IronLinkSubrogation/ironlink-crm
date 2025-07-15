@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Clients Dashboard</title>
+</head>
+<body>
+  <h1>Registered Clients</h1>
+  <ul id="clients-list"></ul>
+
+  <script>
+    fetch('/clients')
+      .then(response => response.json())
+      .then(data => {
+        const list = document.getElementById('clients-list');
+        data.forEach(client => {
+          const item = document.createElement('li');
+          item.innerHTML = `
+            <strong>${client.name}</strong><br>
+            📧 ${client.contactEmail}<br>
+            📞 ${client.contactPhone}<br>
+            👤 Account Manager: ${client.accountManager}<br>
+            📅 Joined: ${new Date(client.joinedOn).toLocaleDateString()}
+            <hr>
+          `;
+          list.appendChild(item);
+        });
+      });
+  </script>
+</body>
+</html>
