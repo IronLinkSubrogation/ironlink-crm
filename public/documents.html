@@ -5,10 +5,30 @@
   <title>Upload Document</title>
 </head>
 <body>
-  <h1>Upload Document</h1>
+  <h1>Upload a Document</h1>
   <form action="/documents" method="POST" enctype="multipart/form-data">
-    <input type="file" name="document" required>
+    <label>Select Client:</label><br>
+    <select name="client" id="client-select" required></select><br><br>
+
+    <label>Choose File:</label><br>
+    <input type="file" name="document" required><br><br>
+
     <button type="submit">Upload</button>
   </form>
+
+  <script>
+    // Load clients into dropdown
+    fetch('/clients')
+      .then(res => res.json())
+      .then(data => {
+        const select = document.getElementById('client-select');
+        data.forEach(client => {
+          const option = document.createElement('option');
+          option.value = client.name;
+          option.textContent = client.name;
+          select.appendChild(option);
+        });
+      });
+  </script>
 </body>
 </html>
