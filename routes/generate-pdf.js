@@ -4,9 +4,11 @@ const fs = require('fs');
 const PDFDocument = require('pdfkit');
 const router = express.Router();
 
+// ✅ Paths to JSON data
 const CLIENTS_FILE = path.join(__dirname, '..', 'data', 'clients.json');
 const CLAIMS_FILE = path.join(__dirname, '..', 'data', 'claims.json');
 
+// ✅ Shared PDF rendering
 function generatePDF(res, title, fields) {
   const doc = new PDFDocument();
   res.setHeader('Content-Type', 'application/pdf');
