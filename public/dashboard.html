@@ -1,24 +1,143 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>IronLink Dashboard</title>
+  <meta charset="UTF-8" />
+  <title>IronLink CRM Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f6f8;
+      padding: 20px;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    #controls {
+      margin-bottom: 20px;
+    }
+    canvas {
+      margin-top: 30px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    button, input {
+      padding: 8px;
+      margin-right: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      cursor: pointer;
+      background-color: #4a90e2;
+      color: white;
+      border: none;
+    }
+    button:hover {
+      background-color: #357ab8;
+    }
+  </style>
 </head>
 <body>
-  <h1>Uploaded Documents</h1>
-  <ul id="documents-list"></ul>
+  <h1>📊 IronLink CRM Dashboard</h1>
+
+  <div id="controls">
+    <label for="adminKey">Admin Key:</label>
+    <input type="password" id="adminKey" placeholder="Enter admin key" />
+    <button onclick="loadAnalytics()">Load Analytics</button>
+    <button onclick="exportClaims()">Export Claims</button>
+    <button onclick="exportDocuments()">Export Documents</button>
+    <button onclick="archiveClaims()">Archive Recovered Claims</button>
+  </div>
+
+  <canvas id="stageChart" width="600" height="300"></canvas>
+  <canvas id="clientChart" width="600" height="300"></canvas>
+  <canvas id="weekChart" width="600" height="300"></canvas>
 
   <script>
-    fetch('/data/documents.json')
-      .then(response => response.json())
-      .then(data => {
-        const list = document.getElementById('documents-list');
-        data.forEach(doc => {
-          const item = document.createElement('li');
-          item.textContent = `${doc.originalName} — uploaded on ${new Date(doc.date).toLocaleString()}`;
-          list.appendChild(item);
-        });
+    let adminKey = "";
+
+    function getKey() {
+      adminKey = document.getElementById('adminKey').value;
+      if (!adminKey) {
+        alert("Please enter admin key first.");
+        return false;
+      }
+      return true;
+    }
+
+    async function loadAnalytics() {
+      if (!getKey()) return;
+
+      const res = await fetch(`/analytics?adminKey=${adminKey}`);
+      if (!res.ok) {
+        alert("Invalid admin key.");
+        return;
+      }
+      const data = await res.json();
+      drawCharts(data);
+    }
+
+    async function exportClaims() {
+      if (!getKey()) return;
+      window.location.href = `/claims/export?adminKey=${adminKey}`;
+    }
+
+    async function exportDocuments() {
+      if (!getKey()) return;
+      window.location.href = `/documents/export?adminKey=${adminKey}`;
+    }
+
+    async function archiveClaims() {
+      if (!getKey()) return;
+      const res = await fetch(`/claims/archive?adminKey=${adminKey}`);
+      const msg = await res.text();
+      alert(msg);
+    }
+
+    function drawCharts(data) {
+      const stageCtx = document.getElementById('stageChart').getContext('2d');
+      new Chart(stageCtx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(data.byStage),
+          datasets: [{
+            label: 'Claims by Stage',
+            data: Object.values(data.byStage),
+            backgroundColor: '#4a90e2'
+          }]
+        }
       });
+
+      const clientCtx = document.getElementById('clientChart').getContext('2d');
+      new Chart(clientCtx, {
+        type: 'pie',
+        data: {
+          labels: Object.keys(data.byClient),
+          datasets: [{
+            label: 'Claims by Client',
+            data: Object.values(data.byClient),
+            backgroundColor: ['#6dd5fa','#4a90e2','#2c3e50','#1abc9c','#9b59b6']
+          }]
+        }
+      });
+
+      const weekCtx = document.getElementById('weekChart').getContext('2d');
+      new Chart(weekCtx, {
+        type: 'line',
+        data: {
+          labels: Object.keys(data.byWeek),
+          datasets: [{
+            label: 'Claims by Week',
+            data: Object.values(data.byWeek),
+            borderColor: '#2c3e50',
+            fill: false,
+            tension: 0.3
+          }]
+        }
+      });
+    }
   </script>
 </body>
 </html>
