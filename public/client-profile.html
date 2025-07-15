@@ -11,27 +11,57 @@
   <script>
     const params = new URLSearchParams(window.location.search);
     const clientName = params.get('name');
+    const profileDiv = document.getElementById('profile');
 
     if (!clientName) {
-      document.getElementById('profile').innerHTML = '<p>No client specified.</p>';
+      profileDiv.innerHTML = '<p>No client specified.</p>';
     } else {
-      fetch('/clients')
-        .then(response => response.json())
-        .then(data => {
-          const client = data.find(c => c.name.toLowerCase() === clientName.toLowerCase());
-          if (!client) {
-            document.getElementById('profile').innerHTML = `<p>No client found for: ${clientName}</p>`;
-            return;
-          }
+      Promise.all([
+        fetch('/clients').then(res => res.json()),
+        fetch('/data/claims.json').then(res => res.json())
+      ])
+      .then(([clients, claims]) => {
+        const client = clients.find(c =>
+          c.name.toLowerCase() === clientName.toLowerCase()
+        );
 
-          document.getElementById('profile').innerHTML = `
-            <h2>${client.name}</h2>
-            <p>📧 <strong>Email:</strong> ${client.contactEmail}</p>
-            <p>📞 <strong>Phone:</strong> ${client.contactPhone}</p>
-            <p>👤 <strong>Account Manager:</strong> ${client.accountManager}</p>
-            <p>📅 <strong>Joined:</strong> ${new Date(client.joinedOn).toLocaleDateString()}</p>
-          `;
-        });
+        if (!client) {
+          profileDiv.innerHTML = `<p>No client found for: ${clientName}</p>`;
+          return;
+        }
+
+        // Display basic profile info
+        let html = `
+          <h2>${client.name}</h2>
+          <p>📧 <strong>Email:</strong> ${client.contactEmail}</p>
+          <p>📞 <strong>Phone:</strong> ${client.contactPhone}</p>
+          <p>👤 <strong>Account Manager:</strong> ${client.accountManager}</p>
+          <p>📅 <strong>Joined:</strong> ${new Date(client.joinedOn).toLocaleDateString()}</p>
+          <hr>
+          <h3>Associated Claims</h3>
+        `;
+
+        // Filter claims tied to this client
+        const matchingClaims = claims.filter(claim =>
+          claim.client.toLowerCase() === client.name.toLowerCase()
+        );
+
+        if (matchingClaims.length === 0) {
+          html += `<p>No claims submitted for this client.</p>`;
+        } else {
+          html += '<ul>';
+          matchingClaims.forEach(claim => {
+            html += `<li>
+              📝 <strong>Claim #${claim.claimNumber}</strong><br>
+              ${claim.description}<br>
+              Submitted: ${new Date(claim.submittedAt).toLocaleDateString()}
+            </li><br>`;
+          });
+          html += '</ul>';
+        }
+
+        profileDiv.innerHTML = html;
+      });
     }
   </script>
 </body>
