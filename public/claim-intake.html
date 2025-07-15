@@ -16,11 +16,17 @@
     <label>Claim Description:</label><br>
     <textarea name="description" rows="4" cols="50" required></textarea><br><br>
 
+    <label>Recovery Stage:</label><br>
+    <select name="stage" required>
+      <option value="Open">Open</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Recovered">Recovered</option>
+    </select><br><br>
+
     <button type="submit">Submit Claim</button>
   </form>
 
   <script>
-    // Populate dropdown with client names
     fetch('/clients')
       .then(res => res.json())
       .then(data => {
