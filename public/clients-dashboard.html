@@ -5,52 +5,73 @@
   <title>Clients Dashboard</title>
 </head>
 <body>
-  <h1>Registered Clients</h1>
-
-  <input type="text" id="search" placeholder="Search by client name..." />
-  <ul id="clients-list"></ul>
+  <h1>Client Dashboard</h1>
+  <div id="output"></div>
 
   <script>
-    let allClients = [];
+    const params = new URLSearchParams(window.location.search);
+    const clientName = params.get('name');
+    const pin = params.get('pin');
+    const output = document.getElementById('output');
 
-    // Fetch clients data from the backend
-    fetch('/clients')
-      .then(response => response.json())
-      .then(data => {
-        allClients = data;
-        displayClients(data);
-      });
-
-    // Render client list with clickable names
-    function displayClients(clients) {
-      const list = document.getElementById('clients-list');
-      list.innerHTML = '';
-      clients.forEach(client => {
-        const item = document.createElement('li');
-        item.innerHTML = `
-          <strong>
-            <a href="/client-profile.html?name=${encodeURIComponent(client.name)}">
-              ${client.name}
-            </a>
-          </strong><br>
-          📧 ${client.contactEmail}<br>
-          📞 ${client.contactPhone}<br>
-          👤 Account Manager: ${client.accountManager}<br>
-          📅 Joined: ${new Date(client.joinedOn).toLocaleDateString()}
-          <hr>
-        `;
-        list.appendChild(item);
-      });
+    if (!clientName || !pin) {
+      output.innerHTML = '<p>Missing client name or PIN.</p>';
+      return;
     }
 
-    // Live client name search
-    document.getElementById('search').addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      const filtered = allClients.filter(client =>
-        client.name.toLowerCase().includes(query)
-      );
-      displayClients(filtered);
-    });
+    fetch('/clients')
+      .then(res => res.json())
+      .then(clients => {
+        const client = clients.find(c =>
+          c.name.toLowerCase() === clientName.toLowerCase()
+        );
+
+        if (!client || client.pin !== pin) {
+          output.innerHTML = '<p>Invalid client name or PIN.</p>';
+          return;
+        }
+
+        let html = `
+          <h2>Welcome, ${client.name}</h2>
+          <p>📧 ${client.contactEmail} | 📞 ${client.contactPhone}</p>
+          <hr>
+          <h3>Claims</h3><ul id="claims-list"></ul>
+          <h3>Documents</h3><ul id="documents-list"></ul>
+        `;
+        output.innerHTML = html;
+
+        fetch('/claims?client=' + encodeURIComponent(client.name))
+          .then(res => res.json())
+          .then(claims => {
+            const claimsList = document.getElementById('claims-list');
+            claims.forEach(claim => {
+              const li = document.createElement('li');
+              li.innerHTML = `
+                📝 <strong>${claim.claimNumber}</strong><br>
+                ${claim.description}<br>
+                Stage: ${claim.stage}<br>
+                Notes: ${claim.notes}<br>
+                Submitted: ${new Date(claim.submittedAt).toLocaleDateString()}
+              `;
+              claimsList.appendChild(li);
+            });
+          });
+
+        fetch('/documents?client=' + encodeURIComponent(client.name))
+          .then(res => res.json())
+          .then(documents => {
+            const docsList = document.getElementById('documents-list');
+            documents.forEach(doc => {
+              const li = document.createElement('li');
+              li.innerHTML = `
+                📎 ${doc.originalName}<br>
+                Uploaded: ${new Date(doc.date).toLocaleDateString()}<br>
+                ${doc.claimNumber ? 'Linked to Claim #' + doc.claimNumber : ''}
+              `;
+              docsList.appendChild(li);
+            });
+          });
+      });
   </script>
 </body>
 </html>
