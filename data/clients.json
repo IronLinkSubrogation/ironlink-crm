@@ -1,16 +1,26 @@
 [
   {
     "name": "Acme Insurance",
-    "contactEmail": "claims@acmeinsurance.com",
-    "contactPhone": "555-123-4567",
-    "accountManager": "Maria Thompson",
-    "joinedOn": "2025-07-14T22:00:00.000Z"
+    "contactEmail": "claims@acme.com",
+    "contactPhone": "555-1234",
+    "accountManager": "Sarah Jenkins",
+    "joinedOn": "2023-06-01T00:00:00.000Z",
+    "pin": "1234"
   },
   {
     "name": "BroadStone Mutual",
-    "contactEmail": "subro@broadstonemutual.com",
-    "contactPhone": "555-987-6543",
-    "accountManager": "Kevin Lee",
-    "joinedOn": "2025-07-13T16:30:00.000Z"
+    "contactEmail": "subrogation@broadstone.com",
+    "contactPhone": "555-9876",
+    "accountManager": "Marcus Lee",
+    "joinedOn": "2023-07-10T00:00:00.000Z",
+    "pin": "8765"
+  },
+  {
+    "name": "ClearPath Assurance",
+    "contactEmail": "recoveries@clearpath.com",
+    "contactPhone": "555-2222",
+    "accountManager": "Naomi Patel",
+    "joinedOn": "2023-08-22T00:00:00.000Z",
+    "pin": "2468"
   }
 ]
