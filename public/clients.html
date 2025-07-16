@@ -32,7 +32,7 @@
     .card p {
       margin: 8px 0;
     }
-    textarea {
+    textarea, input {
       width: 100%;
       padding: 8px;
       border-radius: 4px;
@@ -40,7 +40,7 @@
       resize: vertical;
     }
     button {
-      margin-top: 20px;
+      margin-top: 10px;
       padding: 8px 16px;
       font-size: 0.95em;
       border: none;
@@ -52,7 +52,7 @@
     button:hover {
       background: #357ab8;
     }
-    #saveStatus {
+    #saveStatus, #docStatus {
       margin-top: 10px;
       font-style: italic;
     }
@@ -105,6 +105,11 @@
           <textarea id="notesInput" rows="4">${client.notes || ""}</textarea>
           <button onclick="saveNotes()">Save Notes</button>
           <div id="saveStatus"></div>
+
+          <h3 style="margin-top: 30px;">📤 Upload New Document</h3>
+          <input type="text" id="docNameInput" placeholder="Enter document name (e.g. Agreement.pdf)" />
+          <button onclick="uploadDocument()">Save Document</button>
+          <div id="docStatus"></div>
         `;
       } catch (err) {
         document.getElementById('clientName').textContent = "Error Loading Client";
@@ -127,6 +132,27 @@
         statusText.style.color = "green";
       } else {
         statusText.textContent = "❌ Error saving notes.";
+        statusText.style.color = "red";
+      }
+    }
+
+    async function uploadDocument() {
+      const docName = document.getElementById('docNameInput').value.trim();
+      if (!docName) return;
+
+      const res = await fetch(`/clients/${currentClientId}/documents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ document: docName })
+      });
+
+      const statusText = document.getElementById('docStatus');
+      if (res.ok) {
+        statusText.textContent = "✅ Document saved.";
+        statusText.style.color = "green";
+        loadClient(); // Refresh view
+      } else {
+        statusText.textContent = "❌ Error saving document.";
         statusText.style.color = "red";
       }
     }
