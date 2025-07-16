@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>IronLink CRM – Audit Log</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6fa;
+      padding: 40px;
+      color: #2c3e50;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    .subheader {
+      color: #555;
+      margin-bottom: 30px;
+    }
+    .client-tile {
+      background-color: #fff;
+      padding: 20px;
+      margin-bottom: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .audit-entry {
+      margin-left: 20px;
+      font-size: 0.95em;
+      margin-bottom: 5px;
+    }
+    .no-logs {
+      font-style: italic;
+      margin-left: 20px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <h1>IronLink CRM</h1>
+  <div class="subheader">Audit Trail Viewer</div>
+
+  <div id="auditContainer">
+    <p>Loading logs...</p>
+  </div>
+
+  <script>
+    async function loadAuditLogs() {
+      const res = await fetch('/clients/list');
+      const clients = await res.json();
+
+      const container = document.getElementById('auditContainer');
+      container.innerHTML = clients.map(c => `
+        <div class="client-tile">
+          <h3>${c.name}</h3>
+          <p><strong>ID:</strong> ${c.id}</p>
+          <p><strong>Role:</strong> ${c.assignedRole || 'Unassigned'}</p>
+          <div>
+            <strong>Audit Log:</strong>
+            ${Array.isArray(c.auditLog) && c.auditLog.length ? c.auditLog.map(log => `
+              <div class="audit-entry">
+                • ${new Date(log.timestamp).toLocaleString()} — ${log.action} (${log.actor})
+              </div>
+            `).join('') : `<div class="no-logs">No activity recorded</div>`}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    loadAuditLogs();
+  </script>
+</body>
+</html>
