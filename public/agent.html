@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Recovery Agent Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6fa;
+      padding: 40px;
+      color: #2c3e50;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    .subheader {
+      margin-bottom: 30px;
+      color: #555;
+    }
+    .client {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .priority {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    .claims {
+      margin-top: 10px;
+    }
+    .claims p {
+      margin: 4px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>IronLink CRM</h1>
+  <div class="subheader">Recovery Agent Dashboard</div>
+
+  <div id="agentClients">
+    <p>Loading assigned clients...</p>
+  </div>
+
+  <script>
+    async function loadAgentClients() {
+      const res = await fetch('/clients/list');
+      const clients = await res.json();
+
+      const assigned = clients.filter(c => c.assignedRole === 'Recovery Agent');
+      const container = document.getElementById('agentClients');
+
+      if (assigned.length === 0) {
+        container.innerHTML = "<p>No clients assigned.</p>";
+        return;
+      }
+
+      container.innerHTML = assigned.map(c => `
+        <div class="client">
+          <h3>${c.name}</h3>
+          <p><strong>Initials:</strong> ${c.initials}</p>
+          <p><strong>Claims Type:</strong> ${c.claimsType}</p>
+          ${c.priority ? '<p class="priority">⚠ High Priority</p>' : ''}
+          <div class="claims">
+            <strong>Claims:</strong>
+            ${c.claimsList.map(cl => `
+              <p>ID: ${typeof cl === 'string' ? cl : cl.id} — Status: ${cl.status || 'Open'}</p>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    loadAgentClients();
+  </script>
+</body>
+</html>
