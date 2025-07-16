@@ -1,0 +1,29 @@
+[
+  {
+    "id": "acme-auto",
+    "name": "Acme Auto",
+    "initials": "AC",
+    "claims": 12,
+    "claimsType": "active",
+    "documents": ["Insurance Agreement.pdf", "Police Report.jpg"],
+    "notes": "Follow-up pending with adjuster."
+  },
+  {
+    "id": "liberty-mutual",
+    "name": "Liberty Mutual",
+    "initials": "LM",
+    "claims": 15,
+    "claimsType": "active",
+    "documents": ["Client Onboarding.pdf"],
+    "notes": "Payment schedule verified."
+  },
+  {
+    "id": "rapid-repairs",
+    "name": "Rapid Repairs",
+    "initials": "RR",
+    "claims": 5,
+    "claimsType": "recovered",
+    "documents": ["Recovery Report.pdf"],
+    "notes": "Case closed on 06/12."
+  }
+]
