@@ -85,6 +85,32 @@ app.post('/clients/:id/upload', upload.single('document'), (req, res) => {
   res.json({ success: true, filename });
 });
 
+// POST update claim status
+app.post('/clients/:clientId/claims/:claimId/update', (req, res) => {
+  const { clientId, claimId } = req.params;
+  const { status } = req.body;
+
+  const clients = loadClients();
+  const client = clients.find(c => c.id === clientId);
+  if (!client) return res.status(404).json({ error: "Client not found" });
+
+  const claim = client.claimsList.find(cl => cl.id === claimId);
+  if (!claim) return res.status(404).json({ error: "Claim not found" });
+
+  claim.status = status;
+  claim.updatedAt = new Date().toISOString();
+
+  client.auditLog = client.auditLog || [];
+  client.auditLog.push({
+    timestamp: new Date().toISOString(),
+    action: `Updated claim ${claimId} status to ${status}`,
+    actor: "Admin"
+  });
+
+  saveClients(clients);
+  res.json({ success: true });
+});
+
 // GET ZIP export
 app.get('/export/zip', (req, res) => {
   const archive = archiver('zip', { zlib: { level: 9 } });
