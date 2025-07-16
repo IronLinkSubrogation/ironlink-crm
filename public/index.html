@@ -1,20 +1,144 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>IronLink CRM</title>
+  <meta charset="UTF-8" />
+  <title>IronLink CRM Portal</title>
+  <link rel="icon" href="/favicon.ico" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6fa;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    aside {
+      width: 220px;
+      background: #2c3e50;
+      color: #fff;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    aside h2 {
+      margin-bottom: 30px;
+      font-size: 1.4em;
+      border-bottom: 1px solid #555;
+      padding-bottom: 10px;
+    }
+    aside a {
+      color: #fff;
+      text-decoration: none;
+      margin: 10px 0;
+      font-weight: 500;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    aside a:hover {
+      background: #34495e;
+    }
+    main {
+      flex: 1;
+      padding: 40px;
+      overflow-y: auto;
+    }
+    .header {
+      font-size: 2em;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .subtext {
+      color: #555;
+      margin-bottom: 30px;
+    }
+    .tile-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .tile {
+      background: #fff;
+      border-radius: 8px;
+      width: 250px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .logo {
+      width: 60px;
+      height: 60px;
+      background: #4a90e2;
+      color: white;
+      border-radius: 50%;
+      font-size: 1.8em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .tile h3 {
+      margin-bottom: 10px;
+      font-size: 1.2em;
+      color: #2c3e50;
+    }
+    .tile p {
+      font-size: 0.95em;
+      color: #777;
+    }
+    .tile button {
+      margin-top: 12px;
+      padding: 6px 12px;
+      font-size: 0.9em;
+      border: none;
+      border-radius: 4px;
+      background: #4a90e2;
+      color: white;
+      cursor: pointer;
+    }
+    .tile button:hover {
+      background: #357ab8;
+    }
+  </style>
 </head>
 <body>
-  <h1>Welcome to IronLink CRM</h1>
-  <nav>
-    <ul>
-      <li><a href="/documents.html">📁 Upload Document</a></li>
-      <li><a href="/dashboard.html">📄 View Documents Dashboard</a></li>
-      <li><a href="/claim-intake.html">📝 Submit New Claim</a></li>
-      <li><a href="/claims-dashboard.html">📊 View Claims Dashboard</a></li>
-      <li><a href="/clients.html">👤 Clients Portal</a></li>
-      <li><a href="/clients-dashboard.html">📋 Registered Clients</a></li>
-    </ul>
-  </nav>
+  <aside>
+    <h2>IronLink CRM</h2>
+    <a href="/claims.html">📝 New Claim</a>
+    <a href="/claims-dashboard.html">📋 Claims Dashboard</a>
+    <a href="/documents.html">📤 Upload Document</a>
+    <a href="/documents-dashboard.html">📁 Documents</a>
+    <a href="/clients.html">👥 Clients Portal</a>
+    <a href="/dashboard.html">📊 Analytics Dashboard</a>
+  </aside>
+  <main>
+    <div class="header">Welcome to IronLink CRM</div>
+    <div class="subtext">Precision in Claims Recovery. Navigate your operations with clarity and control.</div>
+
+    <div class="tile-container">
+      <div class="tile">
+        <div class="logo">AC</div>
+        <h3>Acme Auto</h3>
+        <p>12 active claims</p>
+        <button>View Client</button>
+      </div>
+      <div class="tile">
+        <div class="logo">SG</div>
+        <h3>Star General</h3>
+        <p>8 active claims</p>
+        <button>View Client</button>
+      </div>
+      <div class="tile">
+        <div class="logo">RR</div>
+        <h3>Rapid Repairs</h3>
+        <p>5 recovered claims</p>
+        <button>View Client</button>
+      </div>
+      <!-- You can add more client tiles here -->
+    </div>
+  </main>
 </body>
 </html>
