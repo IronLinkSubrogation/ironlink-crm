@@ -52,7 +52,7 @@
     button:hover {
       background: #357ab8;
     }
-    #saveStatus, #docStatus {
+    .status {
       margin-top: 10px;
       font-style: italic;
     }
@@ -94,6 +94,18 @@
           <p>Total Claims: ${client.claims}</p>
           <p>Status: ${client.claimsType}</p>
 
+          ${
+            client.claimsList?.length
+              ? `<p><strong>Submitted Claims:</strong></p>` +
+                client.claimsList.map(claim => `<p>- ${claim}</p>`).join('')
+              : ''
+          }
+
+          <h3 style="margin-top: 30px;">➕ Add New Claim</h3>
+          <input type="text" id="claimInput" placeholder="Enter claim ID (e.g. TX-11234)" />
+          <button onclick="uploadClaim()">Add Claim</button>
+          <div id="claimStatus" class="status"></div>
+
           <h3 style="margin-top: 30px;">📁 Documents</h3>
           ${
             client.documents?.length
@@ -101,15 +113,15 @@
               : `<p>No documents uploaded yet.</p>`
           }
 
+          <h3 style="margin-top: 30px;">📤 Upload Document</h3>
+          <input type="text" id="docNameInput" placeholder="Enter document name (e.g. Agreement.pdf)" />
+          <button onclick="uploadDocument()">Save Document</button>
+          <div id="docStatus" class="status"></div>
+
           <h3 style="margin-top: 30px;">🗒️ Notes</h3>
           <textarea id="notesInput" rows="4">${client.notes || ""}</textarea>
           <button onclick="saveNotes()">Save Notes</button>
-          <div id="saveStatus"></div>
-
-          <h3 style="margin-top: 30px;">📤 Upload New Document</h3>
-          <input type="text" id="docNameInput" placeholder="Enter document name (e.g. Agreement.pdf)" />
-          <button onclick="uploadDocument()">Save Document</button>
-          <div id="docStatus"></div>
+          <div id="saveStatus" class="status"></div>
         `;
       } catch (err) {
         document.getElementById('clientName').textContent = "Error Loading Client";
@@ -153,6 +165,27 @@
         loadClient(); // Refresh view
       } else {
         statusText.textContent = "❌ Error saving document.";
+        statusText.style.color = "red";
+      }
+    }
+
+    async function uploadClaim() {
+      const claim = document.getElementById('claimInput').value.trim();
+      if (!claim) return;
+
+      const res = await fetch(`/clients/${currentClientId}/claims`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ claim })
+      });
+
+      const statusText = document.getElementById('claimStatus');
+      if (res.ok) {
+        statusText.textContent = "✅ Claim added.";
+        statusText.style.color = "green";
+        loadClient(); // Refresh view
+      } else {
+        statusText.textContent = "❌ Error adding claim.";
         statusText.style.color = "red";
       }
     }
