@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>IronLink CRM – Reports</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6fa;
+      padding: 40px;
+      color: #2c3e50;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    .subheader {
+      margin-bottom: 30px;
+      color: #555;
+    }
+    .client-report {
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    .priority {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    .claim {
+      margin-left: 20px;
+      font-size: 0.95em;
+    }
+    .document {
+      font-size: 0.95em;
+      margin-left: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>IronLink CRM</h1>
+  <div class="subheader">Operational Reports & EIN Documentation</div>
+
+  <div id="reportContainer">
+    <p>Loading reports...</p>
+  </div>
+
+  <script>
+    async function loadReports() {
+      const res = await fetch('/clients/list');
+      const clients = await res.json();
+
+      const container = document.getElementById('reportContainer');
+      container.innerHTML = clients.map(c => `
+        <div class="client-report">
+          <h3>${c.name}</h3>
+          <p><strong>ID:</strong> ${c.id}</p>
+          <p><strong>Initials:</strong> ${c.initials}</p>
+          <p><strong>Claims Type:</strong> ${c.claimsType}</p>
+          <p><strong>Total Claims:</strong> ${c.claims}</p>
+          ${c.priority ? '<p class="priority">⚠ High Priority</p>' : ''}
+          <p><strong>Role:</strong> ${c.assignedRole || 'Unassigned'}</p>
+          <p><strong>Status Overview:</strong></p>
+          ${c.claimsList.map(cl => `
+            <div class="claim">
+              • ${typeof cl === 'string' ? cl : cl.id} — ${cl.status || 'Open'}
+            </div>
+          `).join('')}
+          <p><strong>Documents:</strong></p>
+          ${c.documents.length ? c.documents.map(doc => `
+            <div class="document">• ${doc}</div>
+          `).join('') : '<div class="document">• None uploaded</div>'}
+        </div>
+      `).join('');
+    }
+
+    loadReports();
+  </script>
+</body>
+</html>
