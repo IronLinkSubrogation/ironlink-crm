@@ -1,11 +1,102 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>IronLink Clients</title>
+  <meta charset="UTF-8" />
+  <title>Client Profile</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6fa;
+      color: #2c3e50;
+      padding: 40px;
+    }
+    .header {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    .subheader {
+      color: #555;
+      margin-bottom: 30px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 20px;
+      max-width: 600px;
+    }
+    .card h3 {
+      margin-bottom: 15px;
+    }
+    .card p {
+      margin: 8px 0;
+    }
+    button {
+      margin-top: 20px;
+      padding: 8px 16px;
+      font-size: 0.95em;
+      border: none;
+      border-radius: 4px;
+      background: #4a90e2;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #357ab8;
+    }
+  </style>
 </head>
 <body>
-  <h1>Clients Portal</h1>
-  <p>This page will eventually show client details, claims, and interactions.</p>
+  <div class="header" id="clientName">Loading...</div>
+  <div class="subheader">Client Dashboard</div>
+
+  <div class="card" id="clientInfo">
+    <p>Loading client details...</p>
+  </div>
+
+  <button onclick="window.location.href='/'">← Back to Dashboard</button>
+
+  <script>
+    async function loadClient() {
+      const params = new URLSearchParams(window.location.search);
+      const clientId = params.get('id');
+
+      if (!clientId) {
+        document.getElementById('clientName').textContent = "Client Not Found";
+        document.getElementById('clientInfo').innerHTML = "<p>Missing client ID in URL.</p>";
+        return;
+      }
+
+      try {
+        const res = await fetch(`/clients/${clientId}`);
+        if (!res.ok) throw new Error('Client not found');
+        const client = await res.json();
+
+        document.getElementById('clientName').textContent = client.name;
+
+        document.getElementById('clientInfo').innerHTML = `
+          <h3>📊 Claims Summary</h3>
+          <p>Total Claims: ${client.claims}</p>
+          <p>Status: ${client.claimsType}</p>
+
+          <h3 style="margin-top: 30px;">📁 Documents</h3>
+          ${
+            client.documents?.length
+              ? client.documents.map(doc => `<p>- ${doc}</p>`).join('')
+              : `<p>No documents uploaded yet.</p>`
+          }
+
+          <h3 style="margin-top: 30px;">🗒️ Notes</h3>
+          <p>${client.notes || "No notes available."}</p>
+        `;
+      } catch (err) {
+        document.getElementById('clientName').textContent = "Error Loading Client";
+        document.getElementById('clientInfo').innerHTML = "<p>Unable to retrieve client details.</p>";
+      }
+    }
+
+    loadClient();
+  </script>
 </body>
 </html>
