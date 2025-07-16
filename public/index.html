@@ -173,7 +173,7 @@
           <div class="logo">${client.initials}</div>
           <h3>${client.name}</h3>
           <p>${client.claims} ${status} claims</p>
-          <button>View Client</button>
+          <button onclick="goToClientPage('${client.id}')">View Client</button>
         `;
 
         container.appendChild(tile);
@@ -187,6 +187,10 @@
         return filter === 'all' || status === filter;
       });
       renderTiles(filtered);
+    }
+
+    function goToClientPage(clientId) {
+      window.location.href = `/clients/${clientId}.html`;
     }
 
     loadClients();
