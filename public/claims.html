@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Claims Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6fa;
+      color: #2c3e50;
+      padding: 40px;
+    }
+    .header {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    .subheader {
+      color: #555;
+      margin-bottom: 30px;
+    }
+    input {
+      padding: 8px;
+      font-size: 1em;
+      width: 300px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .tile {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      width: 220px;
+      cursor: default;
+    }
+    .tile h4 {
+      margin: 0 0 8px;
+      font-size: 1.1em;
+    }
+    .tile p {
+      margin: 4px 0;
+      font-size: 0.95em;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">IronLink CRM</div>
+  <div class="subheader">Claims Dashboard</div>
+
+  <input type="text" id="searchInput" placeholder="Search claims..." oninput="filterClaims()" />
+
+  <div class="grid" id="claimsGrid">
+    <p>Loading claims...</p>
+  </div>
+
+  <script>
+    let allClaims = [];
+
+    async function loadClaims() {
+      const res = await fetch('/clients/list');
+      const clients = await res.json();
+
+      allClaims = clients.flatMap(client =>
+        (client.claimsList || []).map(claim => ({
+          claim,
+          clientName: client.name,
+          claimType: client.claimsType,
+        }))
+      );
+
+      renderClaims(allClaims);
+    }
+
+    function renderClaims(claims) {
+      const grid = document.getElementById('claimsGrid');
+      if (claims.length === 0) {
+        grid.innerHTML = "<p>No claims found.</p>";
+        return;
+      }
+
+      grid.innerHTML = claims.map(item => `
+        <div class="tile">
+          <h4>${item.claim}</h4>
+          <p><strong>Client:</strong> ${item.clientName}</p>
+          <p><strong>Type:</strong> ${item.claimType}</p>
+        </div>
+      `).join('');
+    }
+
+    function filterClaims() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allClaims.filter(c =>
+        c.claim.toLowerCase().includes(query) ||
+        c.clientName.toLowerCase().includes(query) ||
+        c.claimType.toLowerCase().includes(query)
+      );
+      renderClaims(filtered);
+    }
+
+    loadClaims();
+  </script>
+</body>
+</html>
