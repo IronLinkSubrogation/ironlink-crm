@@ -114,31 +114,32 @@
     <a href="/clients.html">👥 Clients Portal</a>
     <a href="/dashboard.html">📊 Analytics Dashboard</a>
   </aside>
+
   <main>
     <div class="header">Welcome to IronLink CRM</div>
     <div class="subtext">Precision in Claims Recovery. Navigate your operations with clarity and control.</div>
 
-    <div class="tile-container">
-      <div class="tile">
-        <div class="logo">AC</div>
-        <h3>Acme Auto</h3>
-        <p>12 active claims</p>
-        <button>View Client</button>
-      </div>
-      <div class="tile">
-        <div class="logo">SG</div>
-        <h3>Star General</h3>
-        <p>8 active claims</p>
-        <button>View Client</button>
-      </div>
-      <div class="tile">
-        <div class="logo">RR</div>
-        <h3>Rapid Repairs</h3>
-        <p>5 recovered claims</p>
-        <button>View Client</button>
-      </div>
-      <!-- You can add more client tiles here -->
-    </div>
+    <div class="tile-container" id="clientTiles"></div>
   </main>
+
+  <script>
+    async function loadClients() {
+      const res = await fetch('/clients/list');
+      const clients = await res.json();
+      const container = document.getElementById('clientTiles');
+      clients.forEach(client => {
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.innerHTML = `
+          <div class="logo">${client.initials}</div>
+          <h3>${client.name}</h3>
+          <p>${client.claims} active claims</p>
+          <button>View Client</button>
+        `;
+        container.appendChild(tile);
+      });
+    }
+    loadClients();
+  </script>
 </body>
 </html>
