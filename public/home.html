@@ -2,55 +2,114 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>IronLink CRM Home</title>
+  <title>IronLink Dashboard</title>
   <style>
     body {
-      font-family: sans-serif;
-      background: #eff3f7;
-      text-align: center;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6fa;
+      color: #2c3e50;
       padding: 40px;
     }
-    h1 {
-      color: #2c3e50;
-      font-size: 2.5em;
+    .header {
+      font-size: 2em;
       margin-bottom: 10px;
     }
-    p {
-      font-size: 1.2em;
+    .subheader {
       color: #555;
       margin-bottom: 30px;
     }
-    .nav {
+    .search {
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      padding: 8px;
+      font-size: 1em;
+      width: 300px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .grid {
       display: flex;
       flex-wrap: wrap;
-      justify-content: center;
       gap: 20px;
     }
-    .nav a {
-      text-decoration: none;
-      background: #4a90e2;
-      color: white;
-      padding: 15px 25px;
+    .tile {
+      background: #fff;
+      padding: 20px;
       border-radius: 8px;
-      font-weight: bold;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      width: 200px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
     }
-    .nav a:hover {
-      background: #357ab8;
+    .tile:hover {
+      transform: scale(1.04);
+    }
+    .tile h3 {
+      margin: 0 0 10px;
+      font-size: 1.2em;
+    }
+    .tile p {
+      margin: 4px 0;
+      font-size: 0.95em;
+      color: #555;
     }
   </style>
 </head>
 <body>
-  <h1>Welcome to IronLink CRM</h1>
-  <p>Claims, clients, documents — all in one powerful hub.</p>
+  <div class="header">IronLink CRM</div>
+  <div class="subheader">Client Overview</div>
 
-  <div class="nav">
-    <a href="/claims.html">📝 Submit New Claim</a>
-    <a href="/claims-dashboard.html">📋 Claims Dashboard</a>
-    <a href="/documents.html">📤 Upload Document</a>
-    <a href="/documents-dashboard.html">📁 Documents Dashboard</a>
-    <a href="/clients.html">👥 Clients Portal</a>
-    <a href="/dashboard.html">📊 Admin Dashboard</a>
+  <div class="search">
+    <input type="text" id="searchInput" placeholder="Search clients..." oninput="filterClients()" />
   </div>
+
+  <div class="grid" id="clientGrid">
+    <p>Loading clients...</p>
+  </div>
+
+  <script>
+    let allClients = [];
+
+    async function loadClients() {
+      const res = await fetch('/clients/list');
+      const data = await res.json();
+      allClients = data;
+      renderClients(data);
+    }
+
+    function renderClients(clients) {
+      const grid = document.getElementById('clientGrid');
+      if (clients.length === 0) {
+        grid.innerHTML = "<p>No matching clients found.</p>";
+        return;
+      }
+
+      grid.innerHTML = clients.map(client => `
+        <div class="tile" onclick="goToClient('${client.id}')">
+          <h3>${client.name}</h3>
+          <p><strong>Initials:</strong> ${client.initials}</p>
+          <p><strong>Claims:</strong> ${client.claims}</p>
+          <p><strong>Status:</strong> ${client.claimsType}</p>
+        </div>
+      `).join('');
+    }
+
+    function filterClients() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allClients.filter(client =>
+        client.name.toLowerCase().includes(query) ||
+        client.initials.toLowerCase().includes(query)
+      );
+      renderClients(filtered);
+    }
+
+    function goToClient(id) {
+      window.location.href = `/client.html?id=${id}`;
+    }
+
+    loadClients();
+  </script>
 </body>
 </html>
