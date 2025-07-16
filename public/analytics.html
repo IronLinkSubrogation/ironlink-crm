@@ -2,96 +2,97 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>IronLink Analytics</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>Analytics</title>
   <style>
     body {
-      font-family: sans-serif;
-      padding: 20px;
-      background: #f4f6f8;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6fa;
+      padding: 40px;
+      color: #2c3e50;
     }
     h1 {
-      color: #333;
+      font-size: 2em;
+      margin-bottom: 10px;
     }
-    canvas {
-      margin-top: 30px;
-      background: #fff;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    .subheader {
+      margin-bottom: 30px;
+      color: #555;
     }
-    #prompt {
-      margin-bottom: 20px;
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 1.1em;
+    }
+    .card p {
+      margin: 0;
+      font-size: 1.5em;
+      color: #34495e;
     }
   </style>
 </head>
 <body>
-  <h1>📊 IronLink Analytics Dashboard</h1>
+  <h1>IronLink CRM</h1>
+  <div class="subheader">Analytics Dashboard</div>
 
-  <div id="prompt">
-    <label for="adminKey">Enter Admin Key:</label>
-    <input type="password" id="adminKey" />
-    <button onclick="loadAnalytics()">View Analytics</button>
+  <div class="metrics" id="metricsContainer">
+    <p>Loading analytics...</p>
   </div>
-
-  <canvas id="stageChart" width="600" height="300"></canvas>
-  <canvas id="clientChart" width="600" height="300"></canvas>
-  <canvas id="weekChart" width="600" height="300"></canvas>
 
   <script>
     async function loadAnalytics() {
-      const key = document.getElementById('adminKey').value;
-      const res = await fetch(`/analytics?adminKey=${key}`);
-      if (!res.ok) {
-        alert('Access Denied. Invalid Admin Key.');
-        return;
-      }
-      const data = await res.json();
-      renderCharts(data);
+      const res = await fetch('/clients/list');
+      const clients = await res.json();
+
+      const totalClients = clients.length;
+      const totalClaims = clients.reduce((sum, c) => sum + (c.claimsList?.length || 0), 0);
+
+      const typeBreakdown = {};
+      clients.forEach(c => {
+        const type = c.claimsType || 'Unknown';
+        const count = c.claimsList?.length || 0;
+        typeBreakdown[type] = (typeBreakdown[type] || 0) + count;
+      });
+
+      const priorityClients = clients.filter(c => c.priority).length;
+
+      renderAnalytics({ totalClients, totalClaims, typeBreakdown, priorityClients });
     }
 
-    function renderCharts(data) {
-      const stageCtx = document.getElementById('stageChart').getContext('2d');
-      new Chart(stageCtx, {
-        type: 'bar',
-        data: {
-          labels: Object.keys(data.byStage),
-          datasets: [{
-            label: 'Claims by Stage',
-            data: Object.values(data.byStage),
-            backgroundColor: '#4a90e2'
-          }]
-        }
-      });
-
-      const clientCtx = document.getElementById('clientChart').getContext('2d');
-      new Chart(clientCtx, {
-        type: 'pie',
-        data: {
-          labels: Object.keys(data.byClient),
-          datasets: [{
-            label: 'Claims by Client',
-            data: Object.values(data.byClient),
-            backgroundColor: ['#6dd5fa','#4a90e2','#2c3e50','#1abc9c','#9b59b6']
-          }]
-        }
-      });
-
-      const weekCtx = document.getElementById('weekChart').getContext('2d');
-      new Chart(weekCtx, {
-        type: 'line',
-        data: {
-          labels: Object.keys(data.byWeek),
-          datasets: [{
-            label: 'Claims by Week',
-            data: Object.values(data.byWeek),
-            borderColor: '#2c3e50',
-            fill: false,
-            tension: 0.3
-          }]
-        }
-      });
+    function renderAnalytics(data) {
+      const container = document.getElementById('metricsContainer');
+      container.innerHTML = `
+        <div class="card">
+          <h3>Total Clients</h3>
+          <p>${data.totalClients}</p>
+        </div>
+        <div class="card">
+          <h3>Total Claims Submitted</h3>
+          <p>${data.totalClaims}</p>
+        </div>
+        <div class="card">
+          <h3>High Priority Clients</h3>
+          <p>${data.priorityClients}</p>
+        </div>
+        ${Object.entries(data.typeBreakdown).map(([type, count]) => `
+          <div class="card">
+            <h3>${type} Claims</h3>
+            <p>${count}</p>
+          </div>
+        `).join('')}
+      `;
     }
+
+    loadAnalytics();
   </script>
 </body>
 </html>
