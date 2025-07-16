@@ -1,29 +1,47 @@
 [
   {
-    "id": "acme-auto",
-    "name": "Acme Auto",
-    "initials": "AC",
-    "claims": 12,
-    "claimsType": "active",
-    "documents": ["Insurance Agreement.pdf", "Police Report.jpg"],
-    "notes": "Follow-up pending with adjuster."
+    "id": "CL-1001",
+    "name": "Denton Freight LLC",
+    "initials": "DF",
+    "claimsType": "Cargo",
+    "claims": 3,
+    "claimsList": [
+      { "id": "TX-11234", "status": "Open" },
+      { "id": "TX-11422", "status": "Pending" },
+      { "id": "TX-11789", "status": "Settled" }
+    ],
+    "documents": ["BillOfLading.pdf", "CargoReport.docx"],
+    "notes": "Time-sensitive recovery. Carrier dispute in progress.",
+    "priority": true,
+    "assignedRole": "Recovery Agent"
   },
   {
-    "id": "liberty-mutual",
-    "name": "Liberty Mutual",
-    "initials": "LM",
-    "claims": 15,
-    "claimsType": "active",
-    "documents": ["Client Onboarding.pdf"],
-    "notes": "Payment schedule verified."
+    "id": "CL-1002",
+    "name": "Meridian Property Group",
+    "initials": "MP",
+    "claimsType": "Property",
+    "claims": 2,
+    "claimsList": [
+      { "id": "PR-22100", "status": "Open" },
+      { "id": "PR-22105", "status": "Denied" }
+    ],
+    "documents": ["InspectionReport.pdf", "LossSheet.xlsx"],
+    "notes": "Requires review by underwriting team.",
+    "priority": false,
+    "assignedRole": "Intake Specialist"
   },
   {
-    "id": "rapid-repairs",
-    "name": "Rapid Repairs",
-    "initials": "RR",
-    "claims": 5,
-    "claimsType": "recovered",
-    "documents": ["Recovery Report.pdf"],
-    "notes": "Case closed on 06/12."
+    "id": "CL-1003",
+    "name": "Velocity Auto Transport",
+    "initials": "VAT",
+    "claimsType": "Auto",
+    "claims": 1,
+    "claimsList": [
+      { "id": "AT-88342", "status": "Pending" }
+    ],
+    "documents": ["AccidentForm.pdf"],
+    "notes": "Awaiting recovery acknowledgment.",
+    "priority": true,
+    "assignedRole": "Recovery Agent"
   }
 ]
