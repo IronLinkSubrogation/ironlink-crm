@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const archiver = require('archiver');
 const upload = multer({ dest: 'uploads/' });
 
 const app = express();
@@ -10,23 +11,23 @@ const PORT = 3000;
 app.use(express.static('public'));
 app.use(express.json());
 
-// Load clients from file
+// Load clients
 function loadClients() {
   const data = fs.readFileSync('clients.json', 'utf8');
   return JSON.parse(data);
 }
 
-// Save clients to file
+// Save clients
 function saveClients(clients) {
   fs.writeFileSync('clients.json', JSON.stringify(clients, null, 2), 'utf8');
 }
 
-// 🔄 GET all clients
+// GET all clients
 app.get('/clients/list', (req, res) => {
   res.json(loadClients());
 });
 
-// 🛠️ POST update priority or role
+// POST update priority or role
 app.post('/clients/:id/update', (req, res) => {
   const { id } = req.params;
   const { assignedRole, priority } = req.body;
@@ -59,7 +60,7 @@ app.post('/clients/:id/update', (req, res) => {
   res.json({ success: true });
 });
 
-// 📎 POST upload document
+// POST upload document
 app.post('/clients/:id/upload', upload.single('document'), (req, res) => {
   const { id } = req.params;
   const clients = loadClients();
@@ -84,7 +85,23 @@ app.post('/clients/:id/upload', upload.single('document'), (req, res) => {
   res.json({ success: true, filename });
 });
 
-// ✅ Server listener
+// GET ZIP export
+app.get('/export/zip', (req, res) => {
+  const archive = archiver('zip', { zlib: { level: 9 } });
+  res.attachment('ironlink_bundle.zip');
+  archive.pipe(res);
+
+  archive.file('clients.json', { name: 'clients.json' });
+  archive.directory('uploads/', 'uploads');
+
+  if (fs.existsSync('screenshots/')) {
+    archive.directory('screenshots/', 'screenshots');
+  }
+
+  archive.finalize();
+});
+
+// Start server
 app.listen(PORT, () => {
   console.log(`IronLink CRM backend running at http://localhost:${PORT}`);
 });
