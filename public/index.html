@@ -60,6 +60,14 @@
       margin-bottom: 30px;
     }
 
+    select {
+      padding: 8px 12px;
+      font-size: 1em;
+      margin-bottom: 30px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
     .tile-container {
       display: flex;
       flex-wrap: wrap;
@@ -133,26 +141,54 @@
     <div class="header">Welcome to IronLink CRM</div>
     <div class="subtext">Precision in Claims Recovery. Navigate your operations with clarity and control.</div>
 
+    <select id="claimFilter" onchange="filterTiles()">
+      <option value="all">All Clients</option>
+      <option value="active">Active Claims Only</option>
+      <option value="recovered">Recovered Only</option>
+    </select>
+
     <div class="tile-container" id="clientTiles"></div>
   </main>
 
   <script>
+    let clientData = [];
+
     async function loadClients() {
       const res = await fetch('/clients/list');
-      const clients = await res.json();
+      clientData = await res.json();
+      renderTiles(clientData);
+    }
+
+    function renderTiles(data) {
       const container = document.getElementById('clientTiles');
-      clients.forEach(client => {
+      container.innerHTML = '';
+
+      data.forEach(client => {
+        const status = client.claimsType || 'active';
         const tile = document.createElement('div');
         tile.className = 'tile';
+        tile.setAttribute('data-status', status);
+
         tile.innerHTML = `
           <div class="logo">${client.initials}</div>
           <h3>${client.name}</h3>
-          <p>${client.claims} active claims</p>
+          <p>${client.claims} ${status} claims</p>
           <button>View Client</button>
         `;
+
         container.appendChild(tile);
       });
     }
+
+    function filterTiles() {
+      const filter = document.getElementById('claimFilter').value;
+      const filtered = clientData.filter(client => {
+        const status = client.claimsType || 'active';
+        return filter === 'all' || status === filter;
+      });
+      renderTiles(filtered);
+    }
+
     loadClients();
   </script>
 </body>
