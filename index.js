@@ -1,26 +1,26 @@
-const fs = require('fs');
-const path = require('path');
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const clientsFile = path.join(__dirname, 'clients.json');
 
-// Serve static assets
+// Serve static assets from /public
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Enable JSON body parsing for POST
+// Enable JSON body parsing
 app.use(express.json());
 
-// Route: Get list of all clients
+// Route: Get list of all clients for homepage
 app.get('/clients/list', (req, res) => {
   if (!fs.existsSync(clientsFile)) {
-    return res.json([]); // No clients yet
+    return res.json([]); // No data yet
   }
 
   const rawData = fs.readFileSync(clientsFile);
   const clients = JSON.parse(rawData);
 
-  // Only return essentials for homepage tiles
   const summary = clients.map(({ id, name, initials, claims, claimsType }) => ({
     id, name, initials, claims, claimsType
   }));
@@ -33,7 +33,7 @@ app.get('/clients/:id', (req, res) => {
   const clientId = req.params.id;
 
   if (!fs.existsSync(clientsFile)) {
-    return res.status(404).json({ error: 'No client data found' });
+    return res.status(404).json({ error: 'Client data missing' });
   }
 
   const rawData = fs.readFileSync(clientsFile);
@@ -47,7 +47,7 @@ app.get('/clients/:id', (req, res) => {
   res.json(client);
 });
 
-// Route: Add new client (already completed earlier)
+// Route: Create a new client
 app.post('/clients/create', (req, res) => {
   const newClient = req.body;
 
@@ -70,7 +70,29 @@ app.post('/clients/create', (req, res) => {
   res.status(201).json({ message: 'Client created successfully' });
 });
 
+// Route: Update notes for a client
+app.post('/clients/:id/notes', (req, res) => {
+  const clientId = req.params.id;
+  const { notes } = req.body;
+
+  if (!fs.existsSync(clientsFile)) {
+    return res.status(404).json({ error: 'Client file missing' });
+  }
+
+  const rawData = fs.readFileSync(clientsFile);
+  const clients = JSON.parse(rawData);
+  const client = clients.find(c => c.id === clientId);
+
+  if (!client) {
+    return res.status(404).json({ error: 'Client not found' });
+  }
+
+  client.notes = notes;
+  fs.writeFileSync(clientsFile, JSON.stringify(clients, null, 2));
+  res.json({ message: 'Notes updated' });
+});
+
 // Start server
 app.listen(PORT, () => {
-  console.log(`✅ IronLink backend running at http://localhost:${PORT}`);
+  console.log(`✅ IronLink CRM backend running at http://localhost:${PORT}`);
 });
