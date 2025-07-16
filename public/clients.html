@@ -32,15 +32,16 @@
     .card p {
       margin: 8px 0;
     }
-    textarea, input {
+    input, textarea {
       width: 100%;
       padding: 8px;
+      margin-bottom: 10px;
       border-radius: 4px;
       border: 1px solid #ccc;
+      box-sizing: border-box;
       resize: vertical;
     }
     button {
-      margin-top: 10px;
       padding: 8px 16px;
       font-size: 0.95em;
       border: none;
@@ -48,12 +49,13 @@
       background: #4a90e2;
       color: white;
       cursor: pointer;
+      margin-bottom: 10px;
     }
     button:hover {
       background: #357ab8;
     }
     .status {
-      margin-top: 10px;
+      margin-bottom: 20px;
       font-style: italic;
     }
   </style>
@@ -73,52 +75,54 @@
 
     async function loadClient() {
       const params = new URLSearchParams(window.location.search);
-      const clientId = params.get('id');
-      currentClientId = clientId;
+      currentClientId = params.get('id');
 
-      if (!clientId) {
+      if (!currentClientId) {
         document.getElementById('clientName').textContent = "Client Not Found";
         document.getElementById('clientInfo').innerHTML = "<p>Missing client ID in URL.</p>";
         return;
       }
 
       try {
-        const res = await fetch(`/clients/${clientId}`);
-        if (!res.ok) throw new Error('Client not found');
+        const res = await fetch(`/clients/${currentClientId}`);
+        if (!res.ok) throw new Error("Client not found");
         const client = await res.json();
 
         document.getElementById('clientName').textContent = client.name;
 
         document.getElementById('clientInfo').innerHTML = `
-          <h3>📊 Claims Summary</h3>
-          <p>Total Claims: ${client.claims}</p>
-          <p>Status: ${client.claimsType}</p>
+          <h3>📊 Client Info</h3>
+          <input type="text" id="initialsInput" value="${client.initials}" placeholder="Initials" />
+          <input type="number" id="claimsInput" value="${client.claims}" placeholder="Claim Count" />
+          <input type="text" id="claimsTypeInput" value="${client.claimsType}" placeholder="Claim Type" />
+          <button onclick="saveClientMeta()">Save Client Info</button>
+          <div id="metaStatus" class="status"></div>
 
+          <h3>📄 Submitted Claims</h3>
           ${
             client.claimsList?.length
-              ? `<p><strong>Submitted Claims:</strong></p>` +
-                client.claimsList.map(claim => `<p>- ${claim}</p>`).join('')
-              : ''
+              ? client.claimsList.map(c => `<p>- ${c}</p>`).join("")
+              : `<p>No claims added yet.</p>`
           }
 
-          <h3 style="margin-top: 30px;">➕ Add New Claim</h3>
+          <h3>➕ Add New Claim</h3>
           <input type="text" id="claimInput" placeholder="Enter claim ID (e.g. TX-11234)" />
           <button onclick="uploadClaim()">Add Claim</button>
           <div id="claimStatus" class="status"></div>
 
-          <h3 style="margin-top: 30px;">📁 Documents</h3>
+          <h3>📁 Documents</h3>
           ${
             client.documents?.length
-              ? client.documents.map(doc => `<p>- ${doc}</p>`).join('')
-              : `<p>No documents uploaded yet.</p>`
+              ? client.documents.map(doc => `<p>- ${doc}</p>`).join("")
+              : `<p>No documents uploaded.</p>`
           }
 
-          <h3 style="margin-top: 30px;">📤 Upload Document</h3>
-          <input type="text" id="docNameInput" placeholder="Enter document name (e.g. Agreement.pdf)" />
+          <h3>📤 Upload Document</h3>
+          <input type="text" id="docNameInput" placeholder="Enter document name (e.g. Report.pdf)" />
           <button onclick="uploadDocument()">Save Document</button>
           <div id="docStatus" class="status"></div>
 
-          <h3 style="margin-top: 30px;">🗒️ Notes</h3>
+          <h3>🗒️ Notes</h3>
           <textarea id="notesInput" rows="4">${client.notes || ""}</textarea>
           <button onclick="saveNotes()">Save Notes</button>
           <div id="saveStatus" class="status"></div>
@@ -129,22 +133,43 @@
       }
     }
 
+    async function saveClientMeta() {
+      const initials = document.getElementById('initialsInput').value.trim();
+      const claims = parseInt(document.getElementById('claimsInput').value.trim(), 10);
+      const claimsType = document.getElementById('claimsTypeInput').value.trim();
+
+      const res = await fetch(`/clients/${currentClientId}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initials, claims, claimsType })
+      });
+
+      const statusEl = document.getElementById('metaStatus');
+      if (res.ok) {
+        statusEl.textContent = "✅ Info updated.";
+        statusEl.style.color = "green";
+        loadClient();
+      } else {
+        statusEl.textContent = "❌ Error updating info.";
+        statusEl.style.color = "red";
+      }
+    }
+
     async function saveNotes() {
       const notes = document.getElementById('notesInput').value;
-
       const res = await fetch(`/clients/${currentClientId}/notes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes })
       });
 
-      const statusText = document.getElementById('saveStatus');
+      const statusEl = document.getElementById('saveStatus');
       if (res.ok) {
-        statusText.textContent = "✅ Notes saved successfully.";
-        statusText.style.color = "green";
+        statusEl.textContent = "✅ Notes saved.";
+        statusEl.style.color = "green";
       } else {
-        statusText.textContent = "❌ Error saving notes.";
-        statusText.style.color = "red";
+        statusEl.textContent = "❌ Error saving notes.";
+        statusEl.style.color = "red";
       }
     }
 
@@ -158,14 +183,14 @@
         body: JSON.stringify({ document: docName })
       });
 
-      const statusText = document.getElementById('docStatus');
+      const statusEl = document.getElementById('docStatus');
       if (res.ok) {
-        statusText.textContent = "✅ Document saved.";
-        statusText.style.color = "green";
-        loadClient(); // Refresh view
+        statusEl.textContent = "✅ Document saved.";
+        statusEl.style.color = "green";
+        loadClient();
       } else {
-        statusText.textContent = "❌ Error saving document.";
-        statusText.style.color = "red";
+        statusEl.textContent = "❌ Error saving document.";
+        statusEl.style.color = "red";
       }
     }
 
@@ -179,14 +204,14 @@
         body: JSON.stringify({ claim })
       });
 
-      const statusText = document.getElementById('claimStatus');
+      const statusEl = document.getElementById('claimStatus');
       if (res.ok) {
-        statusText.textContent = "✅ Claim added.";
-        statusText.style.color = "green";
-        loadClient(); // Refresh view
+        statusEl.textContent = "✅ Claim added.";
+        statusEl.style.color = "green";
+        loadClient();
       } else {
-        statusText.textContent = "❌ Error adding claim.";
-        statusText.style.color = "red";
+        statusEl.textContent = "❌ Error adding claim.";
+        statusEl.style.color = "red";
       }
     }
 
