@@ -32,6 +32,13 @@
     .card p {
       margin: 8px 0;
     }
+    textarea {
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      resize: vertical;
+    }
     button {
       margin-top: 20px;
       padding: 8px 16px;
@@ -44,6 +51,10 @@
     }
     button:hover {
       background: #357ab8;
+    }
+    #saveStatus {
+      margin-top: 10px;
+      font-style: italic;
     }
   </style>
 </head>
@@ -58,9 +69,12 @@
   <button onclick="window.location.href='/'">← Back to Dashboard</button>
 
   <script>
+    let currentClientId = "";
+
     async function loadClient() {
       const params = new URLSearchParams(window.location.search);
       const clientId = params.get('id');
+      currentClientId = clientId;
 
       if (!clientId) {
         document.getElementById('clientName').textContent = "Client Not Found";
@@ -88,11 +102,32 @@
           }
 
           <h3 style="margin-top: 30px;">🗒️ Notes</h3>
-          <p>${client.notes || "No notes available."}</p>
+          <textarea id="notesInput" rows="4">${client.notes || ""}</textarea>
+          <button onclick="saveNotes()">Save Notes</button>
+          <div id="saveStatus"></div>
         `;
       } catch (err) {
         document.getElementById('clientName').textContent = "Error Loading Client";
         document.getElementById('clientInfo').innerHTML = "<p>Unable to retrieve client details.</p>";
+      }
+    }
+
+    async function saveNotes() {
+      const notes = document.getElementById('notesInput').value;
+
+      const res = await fetch(`/clients/${currentClientId}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes })
+      });
+
+      const statusText = document.getElementById('saveStatus');
+      if (res.ok) {
+        statusText.textContent = "✅ Notes saved successfully.";
+        statusText.style.color = "green";
+      } else {
+        statusText.textContent = "❌ Error saving notes.";
+        statusText.style.color = "red";
       }
     }
 
