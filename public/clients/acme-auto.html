@@ -2,198 +2,69 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>IronLink CRM Portal</title>
-  <link rel="icon" href="/favicon.ico" />
+  <title>Client Profile – Acme Auto</title>
   <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
       background: #f4f6fa;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    aside {
-      width: 220px;
-      background: #2c3e50;
-      color: #fff;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    aside h2 {
-      margin-bottom: 30px;
-      font-size: 1.4em;
-      border-bottom: 1px solid #555;
-      padding-bottom: 10px;
-    }
-
-    aside a {
-      color: #fff;
-      text-decoration: none;
-      margin: 10px 0;
-      font-weight: 500;
-      padding: 8px 12px;
-      border-radius: 4px;
-    }
-
-    aside a:hover {
-      background: #34495e;
-    }
-
-    main {
-      flex: 1;
+      color: #2c3e50;
       padding: 40px;
-      overflow-y: auto;
     }
-
     .header {
       font-size: 2em;
-      color: #2c3e50;
       margin-bottom: 10px;
     }
-
-    .subtext {
+    .subheader {
       color: #555;
       margin-bottom: 30px;
     }
-
-    select {
-      padding: 8px 12px;
-      font-size: 1em;
-      margin-bottom: 30px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-
-    .tile-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-
-    .tile {
+    .card {
       background: #fff;
       border-radius: 8px;
-      width: 250px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
+      max-width: 600px;
     }
-
-    .logo {
-      width: 60px;
-      height: 60px;
-      background: #4a90e2;
-      color: white;
-      border-radius: 50%;
-      font-size: 1.8em;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    .card h3 {
       margin-bottom: 15px;
     }
-
-    .tile h3 {
-      margin-bottom: 10px;
-      font-size: 1.2em;
-      color: #2c3e50;
+    .card p {
+      margin: 8px 0;
     }
-
-    .tile p {
+    button {
+      margin-top: 20px;
+      padding: 8px 16px;
       font-size: 0.95em;
-      color: #777;
-    }
-
-    .tile button {
-      margin-top: 12px;
-      padding: 6px 12px;
-      font-size: 0.9em;
       border: none;
       border-radius: 4px;
       background: #4a90e2;
       color: white;
       cursor: pointer;
     }
-
-    .tile button:hover {
+    button:hover {
       background: #357ab8;
     }
   </style>
 </head>
 <body>
-  <aside>
-    <h2>IronLink CRM</h2>
-    <a href="/claims.html">📝 New Claim</a>
-    <a href="/claims-dashboard.html">📋 Claims Dashboard</a>
-    <a href="/documents.html">📤 Upload Document</a>
-    <a href="/documents-dashboard.html">📁 Documents</a>
-    <a href="/clients.html">👥 Clients Portal</a>
-    <a href="/dashboard.html">📊 Analytics Dashboard</a>
-  </aside>
+  <div class="header">Acme Auto</div>
+  <div class="subheader">Client Dashboard</div>
 
-  <main>
-    <div class="header">Welcome to IronLink CRM</div>
-    <div class="subtext">Precision in Claims Recovery. Navigate your operations with clarity and control.</div>
+  <div class="card">
+    <h3>📊 Claims Summary</h3>
+    <p>Total Claims: 12</p>
+    <p>Active: 9</p>
+    <p>Recovered: 3</p>
 
-    <select id="claimFilter" onchange="filterTiles()">
-      <option value="all">All Clients</option>
-      <option value="active">Active Claims Only</option>
-      <option value="recovered">Recovered Only</option>
-    </select>
+    <h3 style="margin-top: 30px;">📁 Documents</h3>
+    <p>- Insurance Agreement.pdf</p>
+    <p>- Police Report.jpg</p>
 
-    <div class="tile-container" id="clientTiles"></div>
-  </main>
+    <h3 style="margin-top: 30px;">🗒️ Notes</h3>
+    <p>Follow up pending with adjuster. Expect payout confirmation by end of week.</p>
 
-  <script>
-    let clientData = [];
-
-    async function loadClients() {
-      const res = await fetch('/clients/list');
-      clientData = await res.json();
-      renderTiles(clientData);
-    }
-
-    function renderTiles(data) {
-      const container = document.getElementById('clientTiles');
-      container.innerHTML = '';
-
-      data.forEach(client => {
-        const status = client.claimsType || 'active';
-        const tile = document.createElement('div');
-        tile.className = 'tile';
-        tile.setAttribute('data-status', status);
-
-        tile.innerHTML = `
-          <div class="logo">${client.initials}</div>
-          <h3>${client.name}</h3>
-          <p>${client.claims} ${status} claims</p>
-          <button onclick="goToClientPage('${client.id}')">View Client</button>
-        `;
-
-        container.appendChild(tile);
-      });
-    }
-
-    function filterTiles() {
-      const filter = document.getElementById('claimFilter').value;
-      const filtered = clientData.filter(client => {
-        const status = client.claimsType || 'active';
-        return filter === 'all' || status === filter;
-      });
-      renderTiles(filtered);
-    }
-
-    function goToClientPage(clientId) {
-      window.location.href = `/clients/${clientId}.html`;
-    }
-
-    loadClients();
-  </script>
+    <button onclick="window.history.back()">← Back to Dashboard</button>
+  </div>
 </body>
 </html>
