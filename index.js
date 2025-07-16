@@ -1,73 +1,45 @@
-const express = require('express');
+const fs = require('fs');
 const path = require('path');
+const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
+const clientsFile = path.join(__dirname, 'clients.json');
 
-// Serve static files from /public
+// Serve static assets
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Route: Return list of all clients for homepage
+// Enable JSON body parsing for POST
+app.use(express.json());
+
+// Route: Get list of all clients
 app.get('/clients/list', (req, res) => {
-  res.json([
-    {
-      id: 'acme-auto',
-      name: 'Acme Auto',
-      initials: 'AC',
-      claims: 12,
-      claimsType: 'active'
-    },
-    {
-      id: 'liberty-mutual',
-      name: 'Liberty Mutual',
-      initials: 'LM',
-      claims: 15,
-      claimsType: 'active'
-    },
-    {
-      id: 'rapid-repairs',
-      name: 'Rapid Repairs',
-      initials: 'RR',
-      claims: 5,
-      claimsType: 'recovered'
-    }
-  ]);
+  if (!fs.existsSync(clientsFile)) {
+    return res.json([]); // No clients yet
+  }
+
+  const rawData = fs.readFileSync(clientsFile);
+  const clients = JSON.parse(rawData);
+
+  // Only return essentials for homepage tiles
+  const summary = clients.map(({ id, name, initials, claims, claimsType }) => ({
+    id, name, initials, claims, claimsType
+  }));
+
+  res.json(summary);
 });
 
-// Route: Return detailed info for one client
+// Route: Get full details for one client
 app.get('/clients/:id', (req, res) => {
   const clientId = req.params.id;
 
-  const clients = [
-    {
-      id: 'acme-auto',
-      name: 'Acme Auto',
-      initials: 'AC',
-      claims: 12,
-      claimsType: 'active',
-      documents: ['Insurance Agreement.pdf', 'Police Report.jpg'],
-      notes: 'Follow-up pending with adjuster.'
-    },
-    {
-      id: 'liberty-mutual',
-      name: 'Liberty Mutual',
-      initials: 'LM',
-      claims: 15,
-      claimsType: 'active',
-      documents: ['Client Onboarding.pdf'],
-      notes: 'Payment schedule verified.'
-    },
-    {
-      id: 'rapid-repairs',
-      name: 'Rapid Repairs',
-      initials: 'RR',
-      claims: 5,
-      claimsType: 'recovered',
-      documents: ['Recovery Report.pdf'],
-      notes: 'Case closed on 06/12.'
-    }
-  ];
+  if (!fs.existsSync(clientsFile)) {
+    return res.status(404).json({ error: 'No client data found' });
+  }
 
+  const rawData = fs.readFileSync(clientsFile);
+  const clients = JSON.parse(rawData);
   const client = clients.find(c => c.id === clientId);
+
   if (!client) {
     return res.status(404).json({ error: 'Client not found' });
   }
@@ -75,9 +47,27 @@ app.get('/clients/:id', (req, res) => {
   res.json(client);
 });
 
-// Optional health check route
-app.get('/ping', (req, res) => {
-  res.send('IronLink CRM backend is live');
+// Route: Add new client (already completed earlier)
+app.post('/clients/create', (req, res) => {
+  const newClient = req.body;
+
+  let clients = [];
+  if (fs.existsSync(clientsFile)) {
+    const rawData = fs.readFileSync(clientsFile);
+    clients = JSON.parse(rawData);
+  }
+
+  const exists = clients.some(c => c.id === newClient.id);
+  if (exists) {
+    return res.status(409).json({ error: 'Client ID already exists' });
+  }
+
+  newClient.documents = [];
+  newClient.notes = "";
+
+  clients.push(newClient);
+  fs.writeFileSync(clientsFile, JSON.stringify(clients, null, 2));
+  res.status(201).json({ message: 'Client created successfully' });
 });
 
 // Start server
