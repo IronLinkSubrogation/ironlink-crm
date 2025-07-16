@@ -2,94 +2,93 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>IronLink Dashboard</title>
+  <title>IronLink CRM – Home</title>
   <style>
     body {
-      margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: #f4f6fa;
-      color: #2c3e50;
+      background-color: #f4f6fa;
       padding: 40px;
+      color: #2c3e50;
     }
-    .header {
+    h1 {
       font-size: 2em;
       margin-bottom: 10px;
     }
     .subheader {
+      margin-bottom: 30px;
       color: #555;
-      margin-bottom: 20px;
     }
-    input[type="text"], input[type="number"] {
+    .form {
+      margin-bottom: 40px;
+    }
+    .form input {
       padding: 8px;
-      font-size: 1em;
       margin-right: 10px;
-      margin-bottom: 8px;
-      width: 180px;
+      font-size: 1em;
       border-radius: 4px;
       border: 1px solid #ccc;
     }
-    button {
+    .form button {
       padding: 8px 16px;
-      font-size: 0.95em;
+      font-size: 1em;
       border: none;
       border-radius: 4px;
-      background: #4a90e2;
+      background-color: #2d89ef;
       color: white;
       cursor: pointer;
     }
-    button:hover {
-      background: #357ab8;
-    }
-    .status {
-      margin-top: 10px;
-      font-style: italic;
+    #searchInput {
+      padding: 8px;
+      font-size: 1em;
+      width: 300px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
     }
     .grid {
       display: flex;
       flex-wrap: wrap;
       gap: 20px;
-      margin-top: 30px;
     }
     .tile {
-      background: #fff;
+      background-color: #fff;
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      width: 200px;
+      width: 220px;
       cursor: pointer;
-      transition: transform 0.2s ease;
     }
-    .tile:hover {
-      transform: scale(1.04);
-    }
-    .tile h3 {
-      margin: 0 0 10px;
-      font-size: 1.2em;
+    .tile h4 {
+      margin: 0 0 8px;
+      font-size: 1.1em;
     }
     .tile p {
       margin: 4px 0;
       font-size: 0.95em;
       color: #555;
     }
+    .priority {
+      color: #e74c3c;
+      font-weight: bold;
+      font-size: 0.95em;
+    }
   </style>
 </head>
 <body>
-  <div class="header">IronLink CRM</div>
-  <div class="subheader">Client Overview</div>
+  <h1>IronLink CRM</h1>
+  <div class="subheader">Client Management</div>
+
+  <div class="form">
+    <input type="text" id="newName" placeholder="Client name" />
+    <input type="text" id="newInitials" placeholder="Initials" />
+    <input type="text" id="newId" placeholder="Client ID" />
+    <input type="text" id="newType" placeholder="Claim type" />
+    <button onclick="createClient()">Add Client</button>
+  </div>
 
   <input type="text" id="searchInput" placeholder="Search clients..." oninput="filterClients()" />
 
-  <div class="subheader" style="margin-top: 40px;">Add New Client</div>
-  <div>
-    <input type="text" id="newName" placeholder="Full Name" />
-    <input type="text" id="newInitials" placeholder="Initials" />
-    <input type="number" id="newClaims" placeholder="Claim Count" />
-    <input type="text" id="newType" placeholder="Claim Type (e.g. Cargo)" />
-    <button onclick="createClient()">Create Client</button>
-    <div id="createStatus" class="status"></div>
-  </div>
-
-  <div class="grid" id="clientGrid">
+  <div class="grid" id="clientsGrid">
     <p>Loading clients...</p>
   </div>
 
@@ -100,64 +99,66 @@
       const res = await fetch('/clients/list');
       const data = await res.json();
       allClients = data;
-      renderClients(data);
+      renderClients(allClients);
     }
 
-    function renderClients(clients) {
-      const grid = document.getElementById('clientGrid');
-      if (clients.length === 0) {
-        grid.innerHTML = "<p>No matching clients found.</p>";
+    function renderClients(data) {
+      const container = document.getElementById('clientsGrid');
+      if (data.length === 0) {
+        container.innerHTML = "<p>No clients found.</p>";
         return;
       }
 
-      grid.innerHTML = clients.map(client => `
-        <div class="tile" onclick="goToClient('${client.id}')">
-          <h3>${client.name}</h3>
-          <p><strong>Initials:</strong> ${client.initials}</p>
-          <p><strong>Claims:</strong> ${client.claims}</p>
-          <p><strong>Status:</strong> ${client.claimsType}</p>
+      container.innerHTML = data.map(client => `
+        <div class="tile" onclick="location.href='client.html?id=${client.id}'">
+          <h4>${client.name}</h4>
+          <p><strong>Initials:</strong> ${client.initials || '-'}</p>
+          <p><strong>Claims:</strong> ${client.claims || 0}</p>
+          <p><strong>Type:</strong> ${client.claimsType || '-'}</p>
+          ${client.priority ? `<p class="priority">⚠ High Priority</p>` : ''}
         </div>
       `).join('');
     }
 
     function filterClients() {
       const query = document.getElementById('searchInput').value.toLowerCase();
-      const filtered = allClients.filter(client =>
-        client.name.toLowerCase().includes(query) ||
-        client.initials.toLowerCase().includes(query)
+      const filtered = allClients.filter(c =>
+        c.name.toLowerCase().includes(query) ||
+        c.initials?.toLowerCase().includes(query) ||
+        String(c.claims).includes(query) ||
+        c.claimsType?.toLowerCase().includes(query)
       );
       renderClients(filtered);
     }
 
     async function createClient() {
-      const name = document.getElementById('newName').value.trim();
-      const initials = document.getElementById('newInitials').value.trim();
-      const claims = parseInt(document.getElementById('newClaims').value.trim(), 10);
-      const claimsType = document.getElementById('newType').value.trim();
-      const id = initials + Date.now().toString();
+      const newClient = {
+        id: document.getElementById('newId').value.trim(),
+        name: document.getElementById('newName').value.trim(),
+        initials: document.getElementById('newInitials').value.trim(),
+        claimsType: document.getElementById('newType').value.trim(),
+        claims: 0,
+        priority: false
+      };
 
-      const client = { id, name, initials, claims, claimsType };
+      if (!newClient.id || !newClient.name) {
+        alert("ID and name are required.");
+        return;
+      }
 
       const res = await fetch('/clients/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(client)
+        body: JSON.stringify(newClient)
       });
 
-      const statusEl = document.getElementById('createStatus');
-      if (res.ok) {
-        statusEl.textContent = "✅ Client created.";
-        statusEl.style.color = "green";
+      const result = await res.json();
+      if (res.status === 201) {
+        alert("Client created.");
         loadClients();
       } else {
-        const error = await res.json();
-        statusEl.textContent = "❌ " + (error?.error || "Error creating client.");
-        statusEl.style.color = "red";
+        alert(result.error || "Error creating client.");
       }
-    }
-
-    function goToClient(id) {
-      window.location.href = `/client.html?id=${id}`;
     }
 
     loadClients();
