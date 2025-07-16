@@ -45,6 +45,11 @@
     .tile h4 {
       margin: 0 0 8px;
     }
+    .tile p {
+      margin: 4px 0;
+      font-size: 0.95em;
+      color: #555;
+    }
     .priority {
       color: #e74c3c;
       font-weight: bold;
@@ -70,10 +75,11 @@
       const clients = await res.json();
 
       allClaims = clients.flatMap(client =>
-        (client.claimsList || []).map(claim => ({
-          claim,
+        (client.claimsList || []).map(claimObj => ({
+          claim: typeof claimObj === 'string' ? claimObj : claimObj.id,
+          status: typeof claimObj === 'object' ? claimObj.status : 'Open',
           clientName: client.name,
-          claimType: client.claimsType,
+          claimType: client.claimsType || 'Unspecified',
           priority: client.priority || false
         }))
       );
@@ -97,6 +103,7 @@
             <div class="tile">
               <h4>${c.claim}</h4>
               <p><strong>Client:</strong> ${c.clientName}</p>
+              <p><strong>Status:</strong> ${c.status}</p>
               ${c.priority ? `<p class="priority">⚠ High Priority</p>` : ``}
             </div>
           `).join('')}
@@ -109,7 +116,8 @@
       const filtered = allClaims.filter(c =>
         c.claim.toLowerCase().includes(query) ||
         c.clientName.toLowerCase().includes(query) ||
-        c.claimType.toLowerCase().includes(query)
+        c.claimType.toLowerCase().includes(query) ||
+        c.status.toLowerCase().includes(query)
       );
       renderClaims(filtered);
     }
