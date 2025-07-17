@@ -6,14 +6,14 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); // Serves /public files
+app.use(express.static(path.join(__dirname, 'public'))); // Serves employee.html, employee.js, styles.css
 
-// 🔹 Utility to load a local JSON file
-function loadJSON(filename) {
-  return JSON.parse(fs.readFileSync(path.join(__dirname, filename), 'utf8'));
+// 🔧 Helper to load JSON from /data folder
+function loadJSON(file) {
+  return JSON.parse(fs.readFileSync(path.join(__dirname, 'data', file), 'utf8'));
 }
 
-// 🔹 Confirm server is running
+// 🔹 Health check
 app.get('/', (req, res) => {
   res.send('✅ IronLink backend is running.');
 });
@@ -27,7 +27,7 @@ app.get('/employee/:id', (req, res) => {
     : res.status(404).json({ error: 'Employee not found' });
 });
 
-// 🔹 Get dashboard: assigned tasks + clients
+// 🔹 Get employee dashboard (assigned tasks + client info)
 app.get('/employee/:id/dashboard', (req, res) => {
   const employees = loadJSON('employees.json');
   const tasks = loadJSON('employeeTasks.json');
@@ -35,7 +35,7 @@ app.get('/employee/:id/dashboard', (req, res) => {
   const employee = employees.find(e => e.id === req.params.id);
   const taskBlock = tasks.find(t => t.employeeId === req.params.id);
 
-  if (!employee) return res.status(404).json({ error: 'Employee not found.' });
+  if (!employee) return res.status(404).json({ error: 'Employee not found' });
 
   res.json({
     id: employee.id,
@@ -56,7 +56,7 @@ app.post('/employee/:id/task/:taskId/complete', (req, res) => {
 
   const block = tasks.find(e => e.employeeId === req.params.id);
   const task = block?.tasks.find(t => t.id === req.params.taskId);
-  if (!task) return res.status(404).json({ error: 'Task not found.' });
+  if (!task) return res.status(404).json({ error: 'Task not found' });
 
   task.status = 'done';
 
@@ -68,8 +68,8 @@ app.post('/employee/:id/task/:taskId/complete', (req, res) => {
   };
 
   log.push(entry);
-  fs.writeFileSync(path.join(__dirname, 'employeeTasks.json'), JSON.stringify(tasks, null, 2));
-  fs.writeFileSync(path.join(__dirname, 'activityLog.json'), JSON.stringify(log, null, 2));
+  fs.writeFileSync(path.join(__dirname, 'data', 'employeeTasks.json'), JSON.stringify(tasks, null, 2));
+  fs.writeFileSync(path.join(__dirname, 'data', 'activityLog.json'), JSON.stringify(log, null, 2));
 
   res.json({ status: 'Task marked complete', task });
 });
@@ -91,7 +91,7 @@ app.post('/employee/:id/activity', (req, res) => {
   };
 
   log.push(entry);
-  fs.writeFileSync(path.join(__dirname, 'activityLog.json'), JSON.stringify(log, null, 2));
+  fs.writeFileSync(path.join(__dirname, 'data', 'activityLog.json'), JSON.stringify(log, null, 2));
   res.json({ status: 'Activity logged', entry });
 });
 
@@ -100,7 +100,9 @@ app.post('/employee/:id/onboarding', (req, res) => {
   const checklist = loadJSON('trainingChecklist.json');
   const { moduleId } = req.body;
 
-  if (!moduleId) return res.status(400).json({ error: 'Missing moduleId' });
+  if (!moduleId) {
+    return res.status(400).json({ error: 'Missing moduleId' });
+  }
 
   let entry = checklist.find(e => e.employeeId === req.params.id);
 
@@ -110,7 +112,7 @@ app.post('/employee/:id/onboarding', (req, res) => {
     entry.completed.push(moduleId);
   }
 
-  fs.writeFileSync(path.join(__dirname, 'trainingChecklist.json'), JSON.stringify(checklist, null, 2));
+  fs.writeFileSync(path.join(__dirname, 'data', 'trainingChecklist.json'), JSON.stringify(checklist, null, 2));
   res.json({ status: 'Training module completed', employeeId: req.params.id, moduleId });
 });
 
@@ -135,7 +137,7 @@ app.post('/claim/:id/status', (req, res) => {
   claim.status = newStatus;
   claim.lastUpdated = new Date().toISOString().split("T")[0];
 
-  fs.writeFileSync(path.join(__dirname, 'claims.json'), JSON.stringify(claims, null, 2));
+  fs.writeFileSync(path.join(__dirname, 'data', 'claims.json'), JSON.stringify(claims, null, 2));
   res.json({ status: 'Claim updated', claim });
 });
 
