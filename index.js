@@ -5,45 +5,41 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public'))); // Serves employee.html and assets
 
-// --- Load JSON Data Helper ---
-function loadJSON(file) {
-  return JSON.parse(fs.readFileSync(path.join(__dirname, file), 'utf8'));
+// Utility function to load a JSON file
+function loadJSON(filename) {
+  return JSON.parse(fs.readFileSync(path.join(__dirname, filename), 'utf8'));
 }
 
-// --- ROUTES ---
-
-// Root confirmation
+// ✅ Confirm server is live
 app.get('/', (req, res) => {
-  res.send('IronLink CRM backend is running.');
+  res.send('✅ IronLink backend is running.');
 });
 
-
-// --- EMPLOYEE PROFILE ROUTES ---
-
-// Get single employee profile
+// 🔹 Get employee profile
 app.get('/employee/:id', (req, res) => {
   const id = req.params.id;
   const employees = loadJSON('employees.json');
-  const profile = employees.find(emp => emp.id === id);
+  const profile = employees.find(e => e.id === id);
 
   if (profile) {
     res.json(profile);
   } else {
-    res.status(404).json({ error: 'Employee not found' });
+    res.status(404).json({ error: 'Employee not found.' });
   }
 });
 
-// Get employee dashboard overview
+// 🔹 Get employee dashboard (tasks + clients)
 app.get('/employee/:id/dashboard', (req, res) => {
   const id = req.params.id;
   const employees = loadJSON('employees.json');
   const tasks = loadJSON('employeeTasks.json');
 
-  const employee = employees.find(emp => emp.id === id);
-  const taskList = tasks.find(t => t.employeeId === id);
+  const employee = employees.find(e => e.id === id);
+  const taskBlock = tasks.find(t => t.employeeId === id);
 
-  if (!employee) return res.status(404).json({ error: 'Employee not found' });
+  if (!employee) return res.status(404).json({ error: 'Employee not found.' });
 
   res.json({
     name: employee.name,
@@ -51,52 +47,55 @@ app.get('/employee/:id/dashboard', (req, res) => {
     assignedClients: employee.assignedClients,
     active: employee.active,
     startDate: employee.startDate,
-    tasks: taskList ? taskList.tasks : [],
+    tasks: taskBlock ? taskBlock.tasks : []
   });
 });
 
-// Log new activity for employee
+// 🔹 Log activity (POST)
 app.post('/employee/:id/activity', (req, res) => {
   const id = req.params.id;
-  const logData = loadJSON('activityLog.json');
   const { action, claimId } = req.body;
 
-  const entry = {
+  if (!action || !claimId) {
+    return res.status(400).json({ error: 'Missing action or claimId.' });
+  }
+
+  const logData = loadJSON('activityLog.json');
+  const newEntry = {
     employeeId: id,
     action,
     claimId,
     timestamp: new Date().toISOString()
   };
 
-  logData.push(entry);
+  logData.push(newEntry);
   fs.writeFileSync(path.join(__dirname, 'activityLog.json'), JSON.stringify(logData, null, 2));
-
-  res.json({ status: 'Activity logged', entry });
+  res.json({ status: 'Activity logged', entry: newEntry });
 });
 
-// Mark onboarding checklist module complete
+// 🔹 Update training checklist (POST)
 app.post('/employee/:id/onboarding', (req, res) => {
   const id = req.params.id;
   const { moduleId } = req.body;
 
-  const checklist = loadJSON('trainingChecklist.json');
-  const employeeChecklist = checklist.find(entry => entry.employeeId === id);
+  if (!moduleId) return res.status(400).json({ error: 'Missing moduleId.' });
 
-  if (!employeeChecklist) {
+  const checklist = loadJSON('trainingChecklist.json');
+  let entry = checklist.find(e => e.employeeId === id);
+
+  if (!entry) {
     checklist.push({ employeeId: id, completed: [moduleId] });
   } else {
-    if (!employeeChecklist.completed.includes(moduleId)) {
-      employeeChecklist.completed.push(moduleId);
+    if (!entry.completed.includes(moduleId)) {
+      entry.completed.push(moduleId);
     }
   }
 
   fs.writeFileSync(path.join(__dirname, 'trainingChecklist.json'), JSON.stringify(checklist, null, 2));
-
-  res.json({ status: 'Checklist updated', employeeId: id, moduleId });
+  res.json({ status: 'Training module marked complete', employeeId: id, moduleId });
 });
 
-
-// --- START SERVER ---
+// 🟩 Start the server
 app.listen(PORT, () => {
-  console.log(`IronLink backend running on port ${PORT}`);
+  console.log(`🚀 IronLink backend live on port ${PORT}`);
 });
