@@ -1,0 +1,64 @@
+/* === IronLink Employee Workspace Styles === */
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f4f4f4;
+}
+
+.dashboard {
+  display: flex;
+  height: 100vh;
+}
+
+aside {
+  width: 240px;
+  background-color: #1e293b;
+  color: #fff;
+  padding: 30px 20px;
+}
+
+aside h2 {
+  margin-top: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+aside ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+aside li {
+  margin: 12px 0;
+}
+
+aside button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: left;
+  padding: 8px;
+  width: 100%;
+  transition: background 0.2s ease;
+}
+
+aside button:hover {
+  background-color: #334155;
+}
+
+main {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+}
+
+#content {
+  background: #fff;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
+}
