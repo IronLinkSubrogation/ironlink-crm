@@ -7,7 +7,26 @@
         "type": "review",
         "claimId": "CL001",
         "status": "in_progress",
+        "dueDate": "2025-07-22"
+      },
+      {
+        "id": "t002",
+        "type": "upload",
+        "claimId": "CL002",
+        "status": "done",
         "dueDate": "2025-07-20"
+      }
+    ]
+  },
+  {
+    "employeeId": "e002",
+    "tasks": [
+      {
+        "id": "t003",
+        "type": "check",
+        "claimId": "CL003",
+        "status": "in_progress",
+        "dueDate": "2025-07-24"
       }
     ]
   }
