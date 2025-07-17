@@ -1,6 +1,6 @@
-const id = "e001"; // Future: replace with dynamic user session
+const id = "e001"; // Replace with dynamic login/session later
 
-// 🔹 Load Profile Panel
+// 🔹 Load Profile
 function loadProfile() {
   fetch(`/employee/${id}`)
     .then(res => res.json())
@@ -15,12 +15,12 @@ function loadProfile() {
     });
 }
 
-// 🔹 Load Dashboard Panel
+// 🔹 Load Dashboard (Tasks)
 function loadDashboard() {
   fetch(`/employee/${id}/dashboard`)
     .then(res => res.json())
     .then(data => {
-      const taskList = data.tasks.map(task => `
+      const list = data.tasks.map(task => `
         <li>
           <strong>${task.type}</strong> – Claim ${task.claimId} (${task.status})
           <br><small>Due: ${task.dueDate}</small>
@@ -33,7 +33,7 @@ function loadDashboard() {
 
       document.getElementById("content").innerHTML = `
         <h3>Assigned Tasks</h3>
-        <ul>${taskList}</ul>
+        <ul>${list}</ul>
       `;
     });
 }
@@ -48,7 +48,7 @@ function markTaskComplete(taskId) {
     });
 }
 
-// 🔹 Load Training Module Panel
+// 🔹 Load Training Checklist
 function loadTraining() {
   fetch(`/data/trainingChecklist.json`)
     .then(res => res.json())
@@ -64,7 +64,7 @@ function loadTraining() {
         "analytics_intro"
       ];
 
-      const moduleList = modules.map(mod => `
+      const list = modules.map(mod => `
         <li>
           ${mod.replace(/_/g, " ")} ${completed.includes(mod)
             ? "✔"
@@ -74,7 +74,7 @@ function loadTraining() {
 
       document.getElementById("content").innerHTML = `
         <h3>Training Checklist</h3>
-        <ul>${moduleList}</ul>
+        <ul>${list}</ul>
       `;
     });
 }
@@ -93,7 +93,7 @@ function completeModule(moduleId) {
     });
 }
 
-// 🔹 Log Workspace Activity
+// 🔹 Log Activity
 function logActivity() {
   fetch(`/employee/${id}/activity`, {
     method: "POST",
@@ -109,16 +109,16 @@ function logActivity() {
     });
 }
 
-// 🔹 Load Claim Panel + Status Bar
+// 🔹 Load Claim Panel + Status
 function loadClaimBar(claimId) {
   fetch(`/claim/${claimId}`)
     .then(res => res.json())
     .then(claim => {
-      const steps = ["received", "in_review", "zip_sent", "archived"];
-      const bar = steps.map(status => {
-        const isActive = claim.status === status;
-        return `<span style="margin-right:20px; font-weight:${isActive ? 'bold' : 'normal'}">
-          ${status.replace(/_/g, " ")} ${isActive ? "🟢" : ""}
+      const flow = ["received", "in_review", "zip_sent", "archived"];
+      const bar = flow.map(status => {
+        const active = claim.status === status;
+        return `<span style="margin-right:20px; font-weight:${active ? 'bold' : 'normal'}">
+          ${status.replace(/_/g, " ")} ${active ? "🟢" : ""}
         </span>`;
       }).join("");
 
@@ -134,7 +134,7 @@ function loadClaimBar(claimId) {
         <button onclick="advanceStatus('${claim.id}', '${claim.status}')">Advance Status</button>
       `;
 
-      loadNotes(claim.id); // 🔹 Load notes after claim panel
+      loadNotes(claim.id);
     });
 }
 
@@ -142,12 +142,12 @@ function loadClaimBar(claimId) {
 function advanceStatus(claimId, currentStatus) {
   const flow = ["received", "in_review", "zip_sent", "archived"];
   const nextIndex = flow.indexOf(currentStatus) + 1;
-  const newStatus = flow[nextIndex] || currentStatus;
+  const nextStatus = flow[nextIndex] || currentStatus;
 
   fetch(`/claim/${claimId}/status`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ newStatus })
+    body: JSON.stringify({ newStatus: nextStatus })
   })
     .then(res => res.json())
     .then(() => {
@@ -155,12 +155,12 @@ function advanceStatus(claimId, currentStatus) {
     });
 }
 
-// 🔹 Load Claim Notes Panel
+// 🔹 Load Claim Notes
 function loadNotes(claimId) {
   fetch(`/claim/${claimId}/notes`)
     .then(res => res.json())
     .then(thread => {
-      const notesHTML = thread.map(n => `
+      const list = thread.map(n => `
         <li>
           <strong>${n.author}</strong>: ${n.message}
           <br><small>${new Date(n.timestamp).toLocaleString()}</small>
@@ -169,7 +169,7 @@ function loadNotes(claimId) {
 
       document.getElementById("content").innerHTML += `
         <h4>Claim Notes</h4>
-        <ul>${notesHTML}</ul>
+        <ul>${list}</ul>
         <textarea id="newNote" rows="3" placeholder="Write a note..."></textarea><br>
         <button onclick="submitNote('${claimId}')">💾 Save Note</button>
       `;
@@ -190,5 +190,38 @@ function submitNote(claimId) {
     .then(() => {
       alert("📝 Note saved");
       loadClaimBar(claimId);
+    });
+}
+
+// 🔹 Load Filtered Claims
+function loadFilteredClaims() {
+  const status = document.getElementById("filterStatus").value;
+  const client = document.getElementById("filterClient").value;
+  const date = document.getElementById("filterDate").value;
+
+  fetch(`/claims/filter`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      status: status || null,
+      client: client || null,
+      date: date || null
+    })
+  })
+    .then(res => res.json())
+    .then(data => {
+      const list = data.results.map(c => `
+        <li>
+          <strong>${c.id}</strong> — ${c.client} ($${c.amount.toFixed(2)})  
+          <br>Status: ${c.status}  
+          <br>Updated: ${c.lastUpdated}  
+          <br><button onclick="loadClaimBar('${c.id}')">📊 View Claim</button>
+        </li>
+      `).join("");
+
+      document.getElementById("content").innerHTML = `
+        <h3>Filtered Claims</h3>
+        <ul>${list}</ul>
+      `;
     });
 }
