@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 🔧 JSON loader for /data folder
+// 🔧 JSON loader
 function loadJSON(fileName) {
   return JSON.parse(fs.readFileSync(path.join(__dirname, 'data', fileName), 'utf8'));
 }
@@ -27,7 +27,7 @@ app.get('/employee/:id', (req, res) => {
     : res.status(404).json({ error: 'Employee not found' });
 });
 
-// 🔹 Get employee dashboard: assigned clients + tasks
+// 🔹 Get employee dashboard
 app.get('/employee/:id/dashboard', (req, res) => {
   const employees = loadJSON('employees.json');
   const tasks = loadJSON('employeeTasks.json');
@@ -49,7 +49,7 @@ app.get('/employee/:id/dashboard', (req, res) => {
   });
 });
 
-// 🔹 Mark a specific task complete
+// 🔹 Mark a task complete
 app.post('/employee/:id/task/:taskId/complete', (req, res) => {
   const tasksPath = path.join(__dirname, 'data', 'employeeTasks.json');
   const logPath = path.join(__dirname, 'data', 'activityLog.json');
@@ -77,7 +77,7 @@ app.post('/employee/:id/task/:taskId/complete', (req, res) => {
   res.json({ status: 'Task marked complete', task });
 });
 
-// 🔹 Log a manual activity entry
+// 🔹 Log activity
 app.post('/employee/:id/activity', (req, res) => {
   const logPath = path.join(__dirname, 'data', 'activityLog.json');
   const log = JSON.parse(fs.readFileSync(logPath, 'utf8'));
@@ -98,7 +98,7 @@ app.post('/employee/:id/activity', (req, res) => {
   res.json({ status: 'Activity logged', entry });
 });
 
-// 🔹 Submit completed training module
+// 🔹 Submit training module
 app.post('/employee/:id/onboarding', (req, res) => {
   const checklistPath = path.join(__dirname, 'data', 'trainingChecklist.json');
   const checklist = JSON.parse(fs.readFileSync(checklistPath, 'utf8'));
@@ -119,7 +119,7 @@ app.post('/employee/:id/onboarding', (req, res) => {
   res.json({ status: 'Training module completed', employeeId: req.params.id, moduleId });
 });
 
-// 🔹 Get details of a single claim
+// 🔹 Get claim data
 app.get('/claim/:id', (req, res) => {
   const claims = loadJSON('claims.json');
   const claim = claims.find(c => c.id === req.params.id);
@@ -128,7 +128,7 @@ app.get('/claim/:id', (req, res) => {
     : res.status(404).json({ error: 'Claim not found' });
 });
 
-// 🔹 Advance claim status
+// 🔹 Update claim status
 app.post('/claim/:id/status', (req, res) => {
   const claimsPath = path.join(__dirname, 'data', 'claims.json');
   const claims = JSON.parse(fs.readFileSync(claimsPath, 'utf8'));
@@ -145,6 +145,37 @@ app.post('/claim/:id/status', (req, res) => {
 
   fs.writeFileSync(claimsPath, JSON.stringify(claims, null, 2));
   res.json({ status: 'Claim updated', claim });
+});
+
+// 🔹 Get claim notes
+app.get('/claim/:id/notes', (req, res) => {
+  const notesPath = path.join(__dirname, 'data', 'claimNotes.json');
+  const notes = JSON.parse(fs.readFileSync(notesPath, 'utf8'));
+
+  const thread = notes.filter(n => n.claimId === req.params.id);
+  res.json(thread);
+});
+
+// 🔹 Add claim note
+app.post('/claim/:id/notes', (req, res) => {
+  const notesPath = path.join(__dirname, 'data', 'claimNotes.json');
+  const notes = JSON.parse(fs.readFileSync(notesPath, 'utf8'));
+
+  const { author, message } = req.body;
+  if (!author || !message) {
+    return res.status(400).json({ error: 'Missing author or message' });
+  }
+
+  const entry = {
+    claimId: req.params.id,
+    author,
+    message,
+    timestamp: new Date().toISOString()
+  };
+
+  notes.push(entry);
+  fs.writeFileSync(notesPath, JSON.stringify(notes, null, 2));
+  res.json({ status: 'Note added', entry });
 });
 
 // 🔹 Start server
