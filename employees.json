@@ -1,0 +1,20 @@
+[
+  {
+    "id": "e001",
+    "name": "Casey Morales",
+    "email": "casey@ironlink.com",
+    "role": "analyst",
+    "startDate": "2025-07-17",
+    "active": true,
+    "assignedClients": ["c001", "c003"]
+  },
+  {
+    "id": "e002",
+    "name": "Jordan Reed",
+    "email": "jordan@ironlink.com",
+    "role": "reviewer",
+    "startDate": "2025-07-15",
+    "active": true,
+    "assignedClients": []
+  }
+]
