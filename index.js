@@ -1,23 +1,24 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); // Serves HTML/CSS/JS from frontend
+app.use(express.static(path.join(__dirname, 'public'))); // Serves /public files
 
+// 🔹 Utility to load a local JSON file
 function loadJSON(filename) {
   return JSON.parse(fs.readFileSync(path.join(__dirname, filename), 'utf8'));
 }
 
-// 🔹 Confirm backend is live
+// 🔹 Confirm server is running
 app.get('/', (req, res) => {
   res.send('✅ IronLink backend is running.');
 });
 
-
-// 🔹 Employee Profile
+// 🔹 Get employee profile
 app.get('/employee/:id', (req, res) => {
   const employees = loadJSON('employees.json');
   const profile = employees.find(e => e.id === req.params.id);
@@ -26,59 +27,61 @@ app.get('/employee/:id', (req, res) => {
     : res.status(404).json({ error: 'Employee not found' });
 });
 
-
-// 🔹 Employee Task Dashboard
+// 🔹 Get dashboard: assigned tasks + clients
 app.get('/employee/:id/dashboard', (req, res) => {
   const employees = loadJSON('employees.json');
   const tasks = loadJSON('employeeTasks.json');
 
   const employee = employees.find(e => e.id === req.params.id);
-  const block = tasks.find(t => t.employeeId === req.params.id);
+  const taskBlock = tasks.find(t => t.employeeId === req.params.id);
 
-  if (!employee) return res.status(404).json({ error: 'Not found' });
+  if (!employee) return res.status(404).json({ error: 'Employee not found.' });
 
   res.json({
+    id: employee.id,
     name: employee.name,
     role: employee.role,
+    email: employee.email,
+    startDate: employee.startDate,
     assignedClients: employee.assignedClients,
     active: employee.active,
-    startDate: employee.startDate,
-    tasks: block ? block.tasks : []
+    tasks: taskBlock ? taskBlock.tasks : []
   });
 });
 
-
-// 🔹 Mark Task Complete
+// 🔹 Mark a task as completed
 app.post('/employee/:id/task/:taskId/complete', (req, res) => {
   const tasks = loadJSON('employeeTasks.json');
   const log = loadJSON('activityLog.json');
 
   const block = tasks.find(e => e.employeeId === req.params.id);
   const task = block?.tasks.find(t => t.id === req.params.taskId);
-  if (!task) return res.status(404).json({ error: 'Task not found' });
+  if (!task) return res.status(404).json({ error: 'Task not found.' });
 
   task.status = 'done';
-  log.push({
+
+  const entry = {
     employeeId: req.params.id,
     action: `Completed task ${task.type}`,
     claimId: task.claimId,
     timestamp: new Date().toISOString()
-  });
+  };
 
+  log.push(entry);
   fs.writeFileSync(path.join(__dirname, 'employeeTasks.json'), JSON.stringify(tasks, null, 2));
   fs.writeFileSync(path.join(__dirname, 'activityLog.json'), JSON.stringify(log, null, 2));
 
   res.json({ status: 'Task marked complete', task });
 });
 
-
-// 🔹 Log Activity
+// 🔹 Log activity manually
 app.post('/employee/:id/activity', (req, res) => {
   const log = loadJSON('activityLog.json');
   const { action, claimId } = req.body;
 
-  if (!action || !claimId)
-    return res.status(400).json({ error: 'Missing data' });
+  if (!action || !claimId) {
+    return res.status(400).json({ error: 'Missing action or claimId' });
+  }
 
   const entry = {
     employeeId: req.params.id,
@@ -92,14 +95,12 @@ app.post('/employee/:id/activity', (req, res) => {
   res.json({ status: 'Activity logged', entry });
 });
 
-
-// 🔹 Submit Training Module Completion
+// 🔹 Submit completed training module
 app.post('/employee/:id/onboarding', (req, res) => {
   const checklist = loadJSON('trainingChecklist.json');
   const { moduleId } = req.body;
 
-  if (!moduleId)
-    return res.status(400).json({ error: 'Missing moduleId' });
+  if (!moduleId) return res.status(400).json({ error: 'Missing moduleId' });
 
   let entry = checklist.find(e => e.employeeId === req.params.id);
 
@@ -110,11 +111,10 @@ app.post('/employee/:id/onboarding', (req, res) => {
   }
 
   fs.writeFileSync(path.join(__dirname, 'trainingChecklist.json'), JSON.stringify(checklist, null, 2));
-  res.json({ status: 'Training module completed', moduleId });
+  res.json({ status: 'Training module completed', employeeId: req.params.id, moduleId });
 });
 
-
-// 🔹 Claim Status Panel
+// 🔹 Get individual claim record
 app.get('/claim/:id', (req, res) => {
   const claims = loadJSON('claims.json');
   const claim = claims.find(c => c.id === req.params.id);
@@ -123,8 +123,7 @@ app.get('/claim/:id', (req, res) => {
     : res.status(404).json({ error: 'Claim not found' });
 });
 
-
-// 🔹 Advance Claim Status
+// 🔹 Advance claim to next status
 app.post('/claim/:id/status', (req, res) => {
   const claims = loadJSON('claims.json');
   const claim = claims.find(c => c.id === req.params.id);
@@ -140,8 +139,7 @@ app.post('/claim/:id/status', (req, res) => {
   res.json({ status: 'Claim updated', claim });
 });
 
-
-// 🟩 Start server
+// 🔹 Start server
 app.listen(PORT, () => {
   console.log(`🚀 IronLink backend live on port ${PORT}`);
 });
