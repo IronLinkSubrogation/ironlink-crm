@@ -1,20 +1,20 @@
 [
   {
     "id": "e001",
-    "name": "Casey Morales",
-    "email": "casey@ironlink.com",
-    "role": "analyst",
-    "startDate": "2025-07-17",
-    "active": true,
-    "assignedClients": ["c001", "c003"]
+    "name": "Jonathan Link",
+    "role": "Specialist",
+    "email": "jonathan@ironlink.com",
+    "startDate": "2025-07-01",
+    "assignedClients": ["Metro Insure", "Allied Recovery"],
+    "active": true
   },
   {
     "id": "e002",
-    "name": "Jordan Reed",
-    "email": "jordan@ironlink.com",
-    "role": "reviewer",
-    "startDate": "2025-07-15",
-    "active": true,
-    "assignedClients": []
+    "name": "Natalie Brooks",
+    "role": "Reviewer",
+    "email": "natalie@ironlink.com",
+    "startDate": "2025-07-03",
+    "assignedClients": ["Echo Claims"],
+    "active": true
   }
 ]
