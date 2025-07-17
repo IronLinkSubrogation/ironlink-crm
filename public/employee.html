@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>IronLink Employee Workspace</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="dashboard">
+    <aside>
+      <h2>Workspace</h2>
+      <ul>
+        <li><button onclick="loadProfile()">Profile</button></li>
+        <li><button onclick="loadDashboard()">Dashboard</button></li>
+        <li><button onclick="loadTraining()">Training</button></li>
+        <li><button onclick="logActivity()">Log Activity</button></li>
+      </ul>
+    </aside>
+
+    <main>
+      <div id="content">
+        <h3>Welcome to your workspace</h3>
+        <p>Select a module to begin.</p>
+      </div>
+    </main>
+  </div>
+
+  <script src="employee.js"></script>
+</body>
+</html>
