@@ -54,8 +54,8 @@ app.post('/employee/:id/task/:taskId/complete', (req, res) => {
   const tasksPath = path.join(__dirname, 'data', 'employeeTasks.json');
   const logPath = path.join(__dirname, 'data', 'activityLog.json');
 
-  const tasks = JSON.parse(fs.readFileSync(tasksPath, 'utf8'));
-  const log = JSON.parse(fs.readFileSync(logPath, 'utf8'));
+  const tasks = loadJSON('employeeTasks.json');
+  const log = loadJSON('activityLog.json');
 
   const block = tasks.find(e => e.employeeId === req.params.id);
   const task = block?.tasks.find(t => t.id === req.params.taskId);
@@ -80,7 +80,7 @@ app.post('/employee/:id/task/:taskId/complete', (req, res) => {
 // 🔹 Log activity
 app.post('/employee/:id/activity', (req, res) => {
   const logPath = path.join(__dirname, 'data', 'activityLog.json');
-  const log = JSON.parse(fs.readFileSync(logPath, 'utf8'));
+  const log = loadJSON('activityLog.json');
 
   const { action, claimId } = req.body;
   if (!action || !claimId)
@@ -101,7 +101,7 @@ app.post('/employee/:id/activity', (req, res) => {
 // 🔹 Submit training module
 app.post('/employee/:id/onboarding', (req, res) => {
   const checklistPath = path.join(__dirname, 'data', 'trainingChecklist.json');
-  const checklist = JSON.parse(fs.readFileSync(checklistPath, 'utf8'));
+  const checklist = loadJSON('trainingChecklist.json');
 
   const { moduleId } = req.body;
   if (!moduleId)
@@ -131,7 +131,7 @@ app.get('/claim/:id', (req, res) => {
 // 🔹 Update claim status
 app.post('/claim/:id/status', (req, res) => {
   const claimsPath = path.join(__dirname, 'data', 'claims.json');
-  const claims = JSON.parse(fs.readFileSync(claimsPath, 'utf8'));
+  const claims = loadJSON('claims.json');
 
   const claim = claims.find(c => c.id === req.params.id);
   if (!claim) return res.status(404).json({ error: 'Claim not found' });
@@ -149,9 +149,7 @@ app.post('/claim/:id/status', (req, res) => {
 
 // 🔹 Get claim notes
 app.get('/claim/:id/notes', (req, res) => {
-  const notesPath = path.join(__dirname, 'data', 'claimNotes.json');
-  const notes = JSON.parse(fs.readFileSync(notesPath, 'utf8'));
-
+  const notes = loadJSON('claimNotes.json');
   const thread = notes.filter(n => n.claimId === req.params.id);
   res.json(thread);
 });
@@ -159,7 +157,7 @@ app.get('/claim/:id/notes', (req, res) => {
 // 🔹 Add claim note
 app.post('/claim/:id/notes', (req, res) => {
   const notesPath = path.join(__dirname, 'data', 'claimNotes.json');
-  const notes = JSON.parse(fs.readFileSync(notesPath, 'utf8'));
+  const notes = loadJSON('claimNotes.json');
 
   const { author, message } = req.body;
   if (!author || !message) {
@@ -176,6 +174,28 @@ app.post('/claim/:id/notes', (req, res) => {
   notes.push(entry);
   fs.writeFileSync(notesPath, JSON.stringify(notes, null, 2));
   res.json({ status: 'Note added', entry });
+});
+
+// 🔹 Filter claims by status, client, and/or date
+app.post('/claims/filter', (req, res) => {
+  const claims = loadJSON('claims.json');
+  const { status, client, date } = req.body;
+
+  let filtered = claims;
+
+  if (status) {
+    filtered = filtered.filter(c => c.status === status);
+  }
+
+  if (client) {
+    filtered = filtered.filter(c => c.client === client);
+  }
+
+  if (date) {
+    filtered = filtered.filter(c => c.lastUpdated === date);
+  }
+
+  res.json({ results: filtered });
 });
 
 // 🔹 Start server
