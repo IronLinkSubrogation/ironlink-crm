@@ -1,0 +1,10 @@
+[
+  {
+    "employeeId": "e001",
+    "completed": ["intro_module", "client_handling", "upload_process"]
+  },
+  {
+    "employeeId": "e002",
+    "completed": []
+  }
+]
