@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "id": "CL001",
+    "client": "Metro Insure",
+    "amount": 5600.0,
+    "status": "in_review",
+    "lastUpdated": "2025-07-18",
+    "assignedTo": "e001"
+  },
+  {
+    "id": "CL002",
+    "client": "Allied Recovery",
+    "amount": 3100.0,
+    "status": "zip_sent",
+    "lastUpdated": "2025-07-20",
+    "assignedTo": "e001"
+  },
+  {
+    "id": "CL003",
+    "client": "Echo Claims",
+    "amount": 7800.0,
+    "status": "received",
+    "lastUpdated": "2025-07-19",
+    "assignedTo": "e002"
+  }
+]
