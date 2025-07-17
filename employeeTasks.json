@@ -1,0 +1,21 @@
+[
+  {
+    "employeeId": "e001",
+    "tasks": [
+      {
+        "id": "t001",
+        "type": "review",
+        "claimId": "CL001",
+        "status": "in_progress",
+        "dueDate": "2025-07-20"
+      },
+      {
+        "id": "t002",
+        "type": "upload_verification",
+        "claimId": "CL002",
+        "status": "pending",
+        "dueDate": "2025-07-22"
+      }
+    ]
+  }
+]
