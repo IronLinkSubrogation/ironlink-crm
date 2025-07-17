@@ -8,9 +8,9 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 🔧 Load JSON helper
-function loadJSON(file) {
-  return JSON.parse(fs.readFileSync(path.join(__dirname, 'data', file), 'utf8'));
+// 🔧 JSON loader for /data folder
+function loadJSON(fileName) {
+  return JSON.parse(fs.readFileSync(path.join(__dirname, 'data', fileName), 'utf8'));
 }
 
 // 🔹 Health check
@@ -27,7 +27,7 @@ app.get('/employee/:id', (req, res) => {
     : res.status(404).json({ error: 'Employee not found' });
 });
 
-// 🔹 Get dashboard (tasks + clients)
+// 🔹 Get employee dashboard: assigned clients + tasks
 app.get('/employee/:id/dashboard', (req, res) => {
   const employees = loadJSON('employees.json');
   const tasks = loadJSON('employeeTasks.json');
@@ -49,7 +49,7 @@ app.get('/employee/:id/dashboard', (req, res) => {
   });
 });
 
-// 🔹 Mark a task complete
+// 🔹 Mark a specific task complete
 app.post('/employee/:id/task/:taskId/complete', (req, res) => {
   const tasksPath = path.join(__dirname, 'data', 'employeeTasks.json');
   const logPath = path.join(__dirname, 'data', 'activityLog.json');
@@ -77,14 +77,14 @@ app.post('/employee/:id/task/:taskId/complete', (req, res) => {
   res.json({ status: 'Task marked complete', task });
 });
 
-// 🔹 Log activity
+// 🔹 Log a manual activity entry
 app.post('/employee/:id/activity', (req, res) => {
   const logPath = path.join(__dirname, 'data', 'activityLog.json');
   const log = JSON.parse(fs.readFileSync(logPath, 'utf8'));
 
   const { action, claimId } = req.body;
   if (!action || !claimId)
-    return res.status(400).json({ error: 'Missing data' });
+    return res.status(400).json({ error: 'Missing action or claimId' });
 
   const entry = {
     employeeId: req.params.id,
@@ -98,13 +98,14 @@ app.post('/employee/:id/activity', (req, res) => {
   res.json({ status: 'Activity logged', entry });
 });
 
-// 🔹 Submit training module completion
+// 🔹 Submit completed training module
 app.post('/employee/:id/onboarding', (req, res) => {
   const checklistPath = path.join(__dirname, 'data', 'trainingChecklist.json');
   const checklist = JSON.parse(fs.readFileSync(checklistPath, 'utf8'));
 
   const { moduleId } = req.body;
-  if (!moduleId) return res.status(400).json({ error: 'Missing moduleId' });
+  if (!moduleId)
+    return res.status(400).json({ error: 'Missing moduleId' });
 
   let entry = checklist.find(e => e.employeeId === req.params.id);
 
@@ -118,7 +119,7 @@ app.post('/employee/:id/onboarding', (req, res) => {
   res.json({ status: 'Training module completed', employeeId: req.params.id, moduleId });
 });
 
-// 🔹 Get claim details
+// 🔹 Get details of a single claim
 app.get('/claim/:id', (req, res) => {
   const claims = loadJSON('claims.json');
   const claim = claims.find(c => c.id === req.params.id);
@@ -136,7 +137,8 @@ app.post('/claim/:id/status', (req, res) => {
   if (!claim) return res.status(404).json({ error: 'Claim not found' });
 
   const { newStatus } = req.body;
-  if (!newStatus) return res.status(400).json({ error: 'Missing newStatus' });
+  if (!newStatus)
+    return res.status(400).json({ error: 'Missing newStatus' });
 
   claim.status = newStatus;
   claim.lastUpdated = new Date().toISOString().split("T")[0];
