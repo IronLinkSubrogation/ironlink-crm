@@ -1,133 +1,102 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const multer = require('multer');
-const archiver = require('archiver');
-const upload = multer({ dest: 'uploads/' });
-
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-app.use(express.static('public'));
 app.use(express.json());
 
-// Load clients
-function loadClients() {
-  const data = fs.readFileSync('clients.json', 'utf8');
-  return JSON.parse(data);
+// --- Load JSON Data Helper ---
+function loadJSON(file) {
+  return JSON.parse(fs.readFileSync(path.join(__dirname, file), 'utf8'));
 }
 
-// Save clients
-function saveClients(clients) {
-  fs.writeFileSync('clients.json', JSON.stringify(clients, null, 2), 'utf8');
-}
+// --- ROUTES ---
 
-// GET all clients
-app.get('/clients/list', (req, res) => {
-  res.json(loadClients());
+// Root confirmation
+app.get('/', (req, res) => {
+  res.send('IronLink CRM backend is running.');
 });
 
-// POST update priority or role
-app.post('/clients/:id/update', (req, res) => {
-  const { id } = req.params;
-  const { assignedRole, priority } = req.body;
-  const clients = loadClients();
-  const client = clients.find(c => c.id === id);
 
-  if (!client) return res.status(404).json({ error: "Client not found" });
+// --- EMPLOYEE PROFILE ROUTES ---
 
-  client.auditLog = client.auditLog || [];
+// Get single employee profile
+app.get('/employee/:id', (req, res) => {
+  const id = req.params.id;
+  const employees = loadJSON('employees.json');
+  const profile = employees.find(emp => emp.id === id);
 
-  if (assignedRole !== undefined) {
-    client.assignedRole = assignedRole;
-    client.auditLog.push({
-      timestamp: new Date().toISOString(),
-      action: `Assigned role ${assignedRole}`,
-      actor: "Admin"
-    });
+  if (profile) {
+    res.json(profile);
+  } else {
+    res.status(404).json({ error: 'Employee not found' });
   }
-
-  if (priority !== undefined) {
-    client.priority = priority;
-    client.auditLog.push({
-      timestamp: new Date().toISOString(),
-      action: `Set priority to ${priority}`,
-      actor: "Admin"
-    });
-  }
-
-  saveClients(clients);
-  res.json({ success: true });
 });
 
-// POST upload document
-app.post('/clients/:id/upload', upload.single('document'), (req, res) => {
-  const { id } = req.params;
-  const clients = loadClients();
-  const client = clients.find(c => c.id === id);
+// Get employee dashboard overview
+app.get('/employee/:id/dashboard', (req, res) => {
+  const id = req.params.id;
+  const employees = loadJSON('employees.json');
+  const tasks = loadJSON('employeeTasks.json');
 
-  if (!client || !req.file) {
-    return res.status(400).json({ error: "Missing client or file" });
-  }
+  const employee = employees.find(emp => emp.id === id);
+  const taskList = tasks.find(t => t.employeeId === id);
 
-  const filename = req.file.originalname;
-  client.documents = client.documents || [];
-  client.documents.push(filename);
+  if (!employee) return res.status(404).json({ error: 'Employee not found' });
 
-  client.auditLog = client.auditLog || [];
-  client.auditLog.push({
-    timestamp: new Date().toISOString(),
-    action: `Uploaded document ${filename}`,
-    actor: "Admin"
+  res.json({
+    name: employee.name,
+    role: employee.role,
+    assignedClients: employee.assignedClients,
+    active: employee.active,
+    startDate: employee.startDate,
+    tasks: taskList ? taskList.tasks : [],
   });
-
-  saveClients(clients);
-  res.json({ success: true, filename });
 });
 
-// POST update claim status
-app.post('/clients/:clientId/claims/:claimId/update', (req, res) => {
-  const { clientId, claimId } = req.params;
-  const { status } = req.body;
+// Log new activity for employee
+app.post('/employee/:id/activity', (req, res) => {
+  const id = req.params.id;
+  const logData = loadJSON('activityLog.json');
+  const { action, claimId } = req.body;
 
-  const clients = loadClients();
-  const client = clients.find(c => c.id === clientId);
-  if (!client) return res.status(404).json({ error: "Client not found" });
+  const entry = {
+    employeeId: id,
+    action,
+    claimId,
+    timestamp: new Date().toISOString()
+  };
 
-  const claim = client.claimsList.find(cl => cl.id === claimId);
-  if (!claim) return res.status(404).json({ error: "Claim not found" });
+  logData.push(entry);
+  fs.writeFileSync(path.join(__dirname, 'activityLog.json'), JSON.stringify(logData, null, 2));
 
-  claim.status = status;
-  claim.updatedAt = new Date().toISOString();
-
-  client.auditLog = client.auditLog || [];
-  client.auditLog.push({
-    timestamp: new Date().toISOString(),
-    action: `Updated claim ${claimId} status to ${status}`,
-    actor: "Admin"
-  });
-
-  saveClients(clients);
-  res.json({ success: true });
+  res.json({ status: 'Activity logged', entry });
 });
 
-// GET ZIP export
-app.get('/export/zip', (req, res) => {
-  const archive = archiver('zip', { zlib: { level: 9 } });
-  res.attachment('ironlink_bundle.zip');
-  archive.pipe(res);
+// Mark onboarding checklist module complete
+app.post('/employee/:id/onboarding', (req, res) => {
+  const id = req.params.id;
+  const { moduleId } = req.body;
 
-  archive.file('clients.json', { name: 'clients.json' });
-  archive.directory('uploads/', 'uploads');
+  const checklist = loadJSON('trainingChecklist.json');
+  const employeeChecklist = checklist.find(entry => entry.employeeId === id);
 
-  if (fs.existsSync('screenshots/')) {
-    archive.directory('screenshots/', 'screenshots');
+  if (!employeeChecklist) {
+    checklist.push({ employeeId: id, completed: [moduleId] });
+  } else {
+    if (!employeeChecklist.completed.includes(moduleId)) {
+      employeeChecklist.completed.push(moduleId);
+    }
   }
 
-  archive.finalize();
+  fs.writeFileSync(path.join(__dirname, 'trainingChecklist.json'), JSON.stringify(checklist, null, 2));
+
+  res.json({ status: 'Checklist updated', employeeId: id, moduleId });
 });
 
-// Start server
+
+// --- START SERVER ---
 app.listen(PORT, () => {
-  console.log(`IronLink CRM backend running at http://localhost:${PORT}`);
+  console.log(`IronLink backend running on port ${PORT}`);
 });
