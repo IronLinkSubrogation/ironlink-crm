@@ -1,4 +1,4 @@
-const id = "e001"; // Replace with dynamic session later
+const id = "e001"; // Replace with session logic in future
 
 // 🔹 Load Profile
 function loadProfile() {
@@ -13,11 +13,6 @@ function loadProfile() {
         <p><strong>Clients:</strong> ${data.assignedClients.join(", ")}</p>
       `;
     });
-}
-
-// 🔹 Check Role
-function checkRole(role) {
-  return role === "admin";
 }
 
 // 🔹 Load Dashboard
@@ -37,7 +32,7 @@ function loadDashboard() {
       `).join("");
 
       let adminPanel = "";
-      if (checkRole(data.role)) {
+      if (data.role === "admin") {
         adminPanel = `
           <hr>
           <h4>📈 Admin Tools</h4>
@@ -125,7 +120,7 @@ function logActivity() {
     });
 }
 
-// 🔹 Load Claim Panel
+// 🔹 Load Claim Panel with Status + ZIP
 function loadClaimBar(claimId) {
   fetch(`/claim/${claimId}`)
     .then(res => res.json())
@@ -148,13 +143,14 @@ function loadClaimBar(claimId) {
         </div>
         <br>
         <button onclick="advanceStatus('${claim.id}', '${claim.status}')">Advance Status</button>
+        <button onclick="exportZIP('${claim.id}')">🗂️ Generate ZIP</button>
       `;
 
       loadNotes(claim.id);
     });
 }
 
-// 🔹 Advance Status
+// 🔹 Advance Claim Status
 function advanceStatus(claimId, currentStatus) {
   const flow = ["received", "in_review", "zip_sent", "archived"];
   const nextIndex = flow.indexOf(currentStatus) + 1;
@@ -171,7 +167,20 @@ function advanceStatus(claimId, currentStatus) {
     });
 }
 
-// 🔹 Load Claim Notes
+// 🔹 Export ZIP (log event only)
+function exportZIP(claimId) {
+  fetch(`/claim/${claimId}/zip`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ employeeId: id })
+  })
+    .then(res => res.json())
+    .then(() => {
+      alert(`📦 ZIP Export Logged for Claim ${claimId}`);
+    });
+}
+
+// 🔹 Load Notes
 function loadNotes(claimId) {
   fetch(`/claim/${claimId}/notes`)
     .then(res => res.json())
@@ -190,7 +199,7 @@ function loadNotes(claimId) {
     });
 }
 
-// 🔹 Submit Claim Note
+// 🔹 Submit Note
 function submitNote(claimId) {
   const msg = document.getElementById("newNote").value.trim();
   if (!msg) return alert("Note cannot be empty.");
