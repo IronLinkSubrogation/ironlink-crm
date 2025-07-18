@@ -49,7 +49,7 @@ app.get('/employee/:id/dashboard', (req, res) => {
   });
 });
 
-// 🔹 Mark a task complete
+// 🔹 Mark task complete
 app.post('/employee/:id/task/:taskId/complete', (req, res) => {
   const tasksPath = path.join(__dirname, 'data', 'employeeTasks.json');
   const logPath = path.join(__dirname, 'data', 'activityLog.json');
@@ -119,7 +119,7 @@ app.post('/employee/:id/onboarding', (req, res) => {
   res.json({ status: 'Training module completed', employeeId: req.params.id, moduleId });
 });
 
-// 🔹 Get claim data
+// 🔹 Get claim details
 app.get('/claim/:id', (req, res) => {
   const claims = loadJSON('claims.json');
   const claim = claims.find(c => c.id === req.params.id);
@@ -176,26 +176,40 @@ app.post('/claim/:id/notes', (req, res) => {
   res.json({ status: 'Note added', entry });
 });
 
-// 🔹 Filter claims by status, client, and/or date
+// 🔹 Filter claims
 app.post('/claims/filter', (req, res) => {
   const claims = loadJSON('claims.json');
   const { status, client, date } = req.body;
 
   let filtered = claims;
 
-  if (status) {
-    filtered = filtered.filter(c => c.status === status);
-  }
-
-  if (client) {
-    filtered = filtered.filter(c => c.client === client);
-  }
-
-  if (date) {
-    filtered = filtered.filter(c => c.lastUpdated === date);
-  }
+  if (status) filtered = filtered.filter(c => c.status === status);
+  if (client) filtered = filtered.filter(c => c.client === client);
+  if (date) filtered = filtered.filter(c => c.lastUpdated === date);
 
   res.json({ results: filtered });
+});
+
+// 🔹 Simulate ZIP export
+app.post('/claim/:id/zip', (req, res) => {
+  const logPath = path.join(__dirname, 'data', 'activityLog.json');
+  const log = loadJSON('activityLog.json');
+
+  const { employeeId } = req.body;
+  if (!employeeId) {
+    return res.status(400).json({ error: 'Missing employeeId' });
+  }
+
+  const entry = {
+    employeeId,
+    action: "Exported ZIP for claim",
+    claimId: req.params.id,
+    timestamp: new Date().toISOString()
+  };
+
+  log.push(entry);
+  fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
+  res.json({ status: "ZIP export simulated", entry });
 });
 
 // 🔹 Start server
