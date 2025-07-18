@@ -1,4 +1,4 @@
-const id = "e001"; // Replace with dynamic login/session later
+const id = "e001"; // Replace with dynamic session later
 
 // 🔹 Load Profile
 function loadProfile() {
@@ -15,12 +15,17 @@ function loadProfile() {
     });
 }
 
-// 🔹 Load Dashboard (Tasks)
+// 🔹 Check Role
+function checkRole(role) {
+  return role === "admin";
+}
+
+// 🔹 Load Dashboard
 function loadDashboard() {
   fetch(`/employee/${id}/dashboard`)
     .then(res => res.json())
     .then(data => {
-      const list = data.tasks.map(task => `
+      const taskList = data.tasks.map(task => `
         <li>
           <strong>${task.type}</strong> – Claim ${task.claimId} (${task.status})
           <br><small>Due: ${task.dueDate}</small>
@@ -31,9 +36,20 @@ function loadDashboard() {
         </li>
       `).join("");
 
+      let adminPanel = "";
+      if (checkRole(data.role)) {
+        adminPanel = `
+          <hr>
+          <h4>📈 Admin Tools</h4>
+          <button onclick="loadFilteredClaims()">📂 Filter Claims</button>
+          <p><em>Analytics & ZIP export coming soon...</em></p>
+        `;
+      }
+
       document.getElementById("content").innerHTML = `
         <h3>Assigned Tasks</h3>
-        <ul>${list}</ul>
+        <ul>${taskList}</ul>
+        ${adminPanel}
       `;
     });
 }
@@ -48,7 +64,7 @@ function markTaskComplete(taskId) {
     });
 }
 
-// 🔹 Load Training Checklist
+// 🔹 Load Training
 function loadTraining() {
   fetch(`/data/trainingChecklist.json`)
     .then(res => res.json())
@@ -109,7 +125,7 @@ function logActivity() {
     });
 }
 
-// 🔹 Load Claim Panel + Status
+// 🔹 Load Claim Panel
 function loadClaimBar(claimId) {
   fetch(`/claim/${claimId}`)
     .then(res => res.json())
@@ -138,7 +154,7 @@ function loadClaimBar(claimId) {
     });
 }
 
-// 🔹 Advance Claim Status
+// 🔹 Advance Status
 function advanceStatus(claimId, currentStatus) {
   const flow = ["received", "in_review", "zip_sent", "archived"];
   const nextIndex = flow.indexOf(currentStatus) + 1;
@@ -161,10 +177,8 @@ function loadNotes(claimId) {
     .then(res => res.json())
     .then(thread => {
       const list = thread.map(n => `
-        <li>
-          <strong>${n.author}</strong>: ${n.message}
-          <br><small>${new Date(n.timestamp).toLocaleString()}</small>
-        </li>
+        <li><strong>${n.author}</strong>: ${n.message}
+        <br><small>${new Date(n.timestamp).toLocaleString()}</small></li>
       `).join("");
 
       document.getElementById("content").innerHTML += `
@@ -212,9 +226,9 @@ function loadFilteredClaims() {
     .then(data => {
       const list = data.results.map(c => `
         <li>
-          <strong>${c.id}</strong> — ${c.client} ($${c.amount.toFixed(2)})  
-          <br>Status: ${c.status}  
-          <br>Updated: ${c.lastUpdated}  
+          <strong>${c.id}</strong> — ${c.client} ($${c.amount.toFixed(2)})
+          <br>Status: ${c.status}
+          <br>Updated: ${c.lastUpdated}
           <br><button onclick="loadClaimBar('${c.id}')">📊 View Claim</button>
         </li>
       `).join("");
