@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 🔧 JSON loader
+// 🔧 Helper to load JSON from /data
 function loadJSON(fileName) {
   return JSON.parse(fs.readFileSync(path.join(__dirname, 'data', fileName), 'utf8'));
 }
@@ -160,9 +160,8 @@ app.post('/claim/:id/notes', (req, res) => {
   const notes = loadJSON('claimNotes.json');
 
   const { author, message } = req.body;
-  if (!author || !message) {
+  if (!author || !message)
     return res.status(400).json({ error: 'Missing author or message' });
-  }
 
   const entry = {
     claimId: req.params.id,
@@ -196,9 +195,8 @@ app.post('/claim/:id/zip', (req, res) => {
   const log = loadJSON('activityLog.json');
 
   const { employeeId } = req.body;
-  if (!employeeId) {
+  if (!employeeId)
     return res.status(400).json({ error: 'Missing employeeId' });
-  }
 
   const entry = {
     employeeId,
