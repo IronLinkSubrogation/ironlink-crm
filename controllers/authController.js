@@ -1,22 +1,37 @@
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🔐 IronLink CRM | Login Controller
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 const jwt = require("jsonwebtoken");
 
-exports.login = async (req, res) => {
+// Temp login credentials until DB integration
+const staticUsers = [
+  { email: "admin@ironlink.com", password: "admin123", role: "admin" },
+  { email: "agent@ironlink.com", password: "agent123", role: "employee" }
+];
+
+// POST /auth/login
+const login = (req, res) => {
   const { email, password } = req.body;
 
-  const mockUsers = {
-    "admin@ironlink.com": { role: "admin" },
-    "employee@ironlink.com": { role: "employee" },
-    "client@ironlink.com": { role: "client" },
-  };
+  const user = staticUsers.find(
+    u => u.email === email && u.password === password
+  );
 
-  const user = mockUsers[email];
-  if (!user || password !== "password123") {
+  if (!user) {
     return res.status(401).json({ message: "Invalid credentials" });
   }
 
-  const token = jwt.sign({ email, role: user.role }, process.env.JWT_SECRET, {
-    expiresIn: "1h",
+  const payload = {
+    email: user.email,
+    role: user.role,
+  };
+
+  const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: "1h"
   });
 
   res.status(200).json({ token });
 };
+
+module.exports = { login };
