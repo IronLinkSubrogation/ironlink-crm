@@ -1,44 +1,63 @@
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 👤 IronLink CRM | Admin User Controller
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 let users = [
-  { id: 1, name: "Alice Admin", email: "admin@ironlink.com", role: "admin" },
-  { id: 2, name: "Ethan Employee", email: "ethan@ironlink.com", role: "employee" },
+  { _id: "1", email: "admin@ironlink.com", role: "admin" },
+  { _id: "2", email: "agent@ironlink.com", role: "employee" }
 ];
 
-exports.getAllUsers = (req, res) => {
+// GET /users
+const getAllUsers = (req, res) => {
   res.status(200).json(users);
 };
 
-exports.createUser = (req, res) => {
-  const { name, email, role } = req.body;
+// POST /users
+const createUser = (req, res) => {
+  const { email, role } = req.body;
+  if (!email || !role) {
+    return res.status(400).json({ message: "Email and role are required" });
+  }
+
   const newUser = {
-    id: users.length + 1,
-    name,
+    _id: String(Date.now()),
     email,
-    role: role || "client",
+    role,
   };
+
   users.push(newUser);
   res.status(201).json(newUser);
 };
 
-exports.updateUser = (req, res) => {
-  const userId = parseInt(req.params.id);
-  const user = users.find((u) => u.id === userId);
-  if (!user) return res.status(404).json({ message: "User not found" });
+// PUT /users/:id
+const updateUser = (req, res) => {
+  const { id } = req.params;
+  const { email, role } = req.body;
 
-  user.name = req.body.name || user.name;
-  user.email = req.body.email || user.email;
-  user.role = req.body.role || user.role;
-
-  res.status(200).json(user);
-};
-
-exports.deleteUser = (req, res) => {
-  const userId = parseInt(req.params.id);
-  const before = users.length;
-  users = users.filter((u) => u.id !== userId);
-
-  if (users.length === before) {
+  const index = users.findIndex(user => user._id === id);
+  if (index === -1) {
     return res.status(404).json({ message: "User not found" });
   }
 
-  res.status(200).json({ message: "User deleted successfully" });
+  users[index] = { ...users[index], email, role };
+  res.status(200).json(users[index]);
+};
+
+// DELETE /users/:id
+const deleteUser = (req, res) => {
+  const { id } = req.params;
+  const index = users.findIndex(user => user._id === id);
+  if (index === -1) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const deleted = users.splice(index, 1);
+  res.status(200).json(deleted[0]);
+};
+
+module.exports = {
+  getAllUsers,
+  createUser,
+  updateUser,
+  deleteUser,
 };
