@@ -8,30 +8,26 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 🔧 Helper to load JSON from /data
-function loadJSON(fileName) {
-  return JSON.parse(fs.readFileSync(path.join(__dirname, 'data', fileName), 'utf8'));
+function loadJSON(file) {
+  return JSON.parse(fs.readFileSync(path.join(__dirname, 'data', file), 'utf8'));
 }
 
-// 🔹 Health check
+// Health check
 app.get('/', (req, res) => {
   res.send('✅ IronLink backend is running.');
 });
 
-// 🔹 Get employee profile
+// Get employee profile
 app.get('/employee/:id', (req, res) => {
   const employees = loadJSON('employees.json');
   const profile = employees.find(e => e.id === req.params.id);
-  profile
-    ? res.json(profile)
-    : res.status(404).json({ error: 'Employee not found' });
+  profile ? res.json(profile) : res.status(404).json({ error: 'Employee not found' });
 });
 
-// 🔹 Get employee dashboard
+// Get dashboard
 app.get('/employee/:id/dashboard', (req, res) => {
   const employees = loadJSON('employees.json');
   const tasks = loadJSON('employeeTasks.json');
-
   const employee = employees.find(e => e.id === req.params.id);
   const taskBlock = tasks.find(t => t.employeeId === req.params.id);
 
@@ -49,11 +45,10 @@ app.get('/employee/:id/dashboard', (req, res) => {
   });
 });
 
-// 🔹 Mark task complete
+// Mark task complete
 app.post('/employee/:id/task/:taskId/complete', (req, res) => {
   const tasksPath = path.join(__dirname, 'data', 'employeeTasks.json');
   const logPath = path.join(__dirname, 'data', 'activityLog.json');
-
   const tasks = loadJSON('employeeTasks.json');
   const log = loadJSON('activityLog.json');
 
@@ -62,7 +57,6 @@ app.post('/employee/:id/task/:taskId/complete', (req, res) => {
   if (!task) return res.status(404).json({ error: 'Task not found' });
 
   task.status = 'done';
-
   const entry = {
     employeeId: req.params.id,
     action: `Completed task ${task.type}`,
@@ -77,12 +71,12 @@ app.post('/employee/:id/task/:taskId/complete', (req, res) => {
   res.json({ status: 'Task marked complete', task });
 });
 
-// 🔹 Log activity
+// Log activity
 app.post('/employee/:id/activity', (req, res) => {
   const logPath = path.join(__dirname, 'data', 'activityLog.json');
   const log = loadJSON('activityLog.json');
-
   const { action, claimId } = req.body;
+
   if (!action || !claimId)
     return res.status(400).json({ error: 'Missing action or claimId' });
 
@@ -98,14 +92,13 @@ app.post('/employee/:id/activity', (req, res) => {
   res.json({ status: 'Activity logged', entry });
 });
 
-// 🔹 Submit training module
+// Submit training module
 app.post('/employee/:id/onboarding', (req, res) => {
   const checklistPath = path.join(__dirname, 'data', 'trainingChecklist.json');
   const checklist = loadJSON('trainingChecklist.json');
-
   const { moduleId } = req.body;
-  if (!moduleId)
-    return res.status(400).json({ error: 'Missing moduleId' });
+
+  if (!moduleId) return res.status(400).json({ error: 'Missing moduleId' });
 
   let entry = checklist.find(e => e.employeeId === req.params.id);
 
@@ -119,26 +112,23 @@ app.post('/employee/:id/onboarding', (req, res) => {
   res.json({ status: 'Training module completed', employeeId: req.params.id, moduleId });
 });
 
-// 🔹 Get claim details
+// Get claim
 app.get('/claim/:id', (req, res) => {
   const claims = loadJSON('claims.json');
   const claim = claims.find(c => c.id === req.params.id);
-  claim
-    ? res.json(claim)
-    : res.status(404).json({ error: 'Claim not found' });
+  claim ? res.json(claim) : res.status(404).json({ error: 'Claim not found' });
 });
 
-// 🔹 Update claim status
+// Update claim status
 app.post('/claim/:id/status', (req, res) => {
   const claimsPath = path.join(__dirname, 'data', 'claims.json');
   const claims = loadJSON('claims.json');
-
   const claim = claims.find(c => c.id === req.params.id);
+
   if (!claim) return res.status(404).json({ error: 'Claim not found' });
 
   const { newStatus } = req.body;
-  if (!newStatus)
-    return res.status(400).json({ error: 'Missing newStatus' });
+  if (!newStatus) return res.status(400).json({ error: 'Missing newStatus' });
 
   claim.status = newStatus;
   claim.lastUpdated = new Date().toISOString().split("T")[0];
@@ -147,19 +137,19 @@ app.post('/claim/:id/status', (req, res) => {
   res.json({ status: 'Claim updated', claim });
 });
 
-// 🔹 Get claim notes
+// Get claim notes
 app.get('/claim/:id/notes', (req, res) => {
   const notes = loadJSON('claimNotes.json');
   const thread = notes.filter(n => n.claimId === req.params.id);
   res.json(thread);
 });
 
-// 🔹 Add claim note
+// Add note
 app.post('/claim/:id/notes', (req, res) => {
   const notesPath = path.join(__dirname, 'data', 'claimNotes.json');
   const notes = loadJSON('claimNotes.json');
-
   const { author, message } = req.body;
+
   if (!author || !message)
     return res.status(400).json({ error: 'Missing author or message' });
 
@@ -175,13 +165,12 @@ app.post('/claim/:id/notes', (req, res) => {
   res.json({ status: 'Note added', entry });
 });
 
-// 🔹 Filter claims
+// Filter claims
 app.post('/claims/filter', (req, res) => {
   const claims = loadJSON('claims.json');
   const { status, client, date } = req.body;
 
   let filtered = claims;
-
   if (status) filtered = filtered.filter(c => c.status === status);
   if (client) filtered = filtered.filter(c => c.client === client);
   if (date) filtered = filtered.filter(c => c.lastUpdated === date);
@@ -189,12 +178,12 @@ app.post('/claims/filter', (req, res) => {
   res.json({ results: filtered });
 });
 
-// 🔹 Simulate ZIP export
+// Simulate ZIP export
 app.post('/claim/:id/zip', (req, res) => {
   const logPath = path.join(__dirname, 'data', 'activityLog.json');
   const log = loadJSON('activityLog.json');
-
   const { employeeId } = req.body;
+
   if (!employeeId)
     return res.status(400).json({ error: 'Missing employeeId' });
 
@@ -210,7 +199,24 @@ app.post('/claim/:id/zip', (req, res) => {
   res.json({ status: "ZIP export simulated", entry });
 });
 
-// 🔹 Start server
+// KPI dashboard
+app.get('/admin/:id/kpi', (req, res) => {
+  const log = loadJSON('activityLog.json');
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const recent = log.filter(entry => new Date(entry.timestamp) > sevenDaysAgo);
+  const metrics = {
+    tasksCompleted: recent.filter(e => e.action.startsWith("Completed task")).length,
+    notesLogged: recent.filter(e => e.action === "Added claim note").length,
+    zipExports: recent.filter(e => e.action === "Exported ZIP for claim").length,
+    totalActivities: recent.length
+  };
+
+  res.json(metrics);
+});
+
+// Start server
 app.listen(PORT, () => {
   console.log(`🚀 IronLink backend live on port ${PORT}`);
 });
