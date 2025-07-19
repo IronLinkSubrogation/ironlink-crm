@@ -1,7 +1,12 @@
-const checkRole = (role) => {
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🛡️ IronLink CRM | Role-Based Access Middleware
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Usage: checkRole("admin") → only allows users with role === "admin"
+const checkRole = (requiredRole) => {
   return (req, res, next) => {
-    if (req.user.role !== role) {
-      return res.status(403).json({ message: "Access denied" });
+    if (!req.user || req.user.role !== requiredRole) {
+      return res.status(403).json({ message: "Access denied: insufficient role" });
     }
     next();
   };
