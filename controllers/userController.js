@@ -1,7 +1,6 @@
 let users = [
   { id: 1, name: "Alice Admin", email: "admin@ironlink.com", role: "admin" },
   { id: 2, name: "Ethan Employee", email: "ethan@ironlink.com", role: "employee" },
-  { id: 3, name: "Cindy Client", email: "cindy@ironlink.com", role: "client" },
 ];
 
 exports.getAllUsers = (req, res) => {
