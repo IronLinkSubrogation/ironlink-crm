@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: ironlink-crm-backend
+    runtime: node
+    repo: https://github.com/your-org/ironlink-crm-backend
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: ADMIN_KEY
+        value: your-admin-key
+      - key: DATA_DIR
+        value: ./data
+      - key: FRONTEND_ORIGIN
+        value: https://your-frontend.onrender.com
+    autoDeploy: true
+    plan: starter
+    rootDir: .
