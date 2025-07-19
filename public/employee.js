@@ -1,6 +1,6 @@
-const id = "e001"; // Replace with session logic in future
+const id = "e001"; // Replace with dynamic session logic once login module added
 
-// 🔹 Load Profile
+// Load employee profile
 function loadProfile() {
   fetch(`/employee/${id}`)
     .then(res => res.json())
@@ -15,7 +15,7 @@ function loadProfile() {
     });
 }
 
-// 🔹 Load Dashboard
+// Load dashboard with task list and role-based admin panel
 function loadDashboard() {
   fetch(`/employee/${id}/dashboard`)
     .then(res => res.json())
@@ -37,7 +37,7 @@ function loadDashboard() {
           <hr>
           <h4>📈 Admin Tools</h4>
           <button onclick="loadFilteredClaims()">📂 Filter Claims</button>
-          <p><em>Analytics & ZIP export coming soon...</em></p>
+          <button onclick="loadKPI()">📊 KPI Dashboard</button>
         `;
       }
 
@@ -49,7 +49,7 @@ function loadDashboard() {
     });
 }
 
-// 🔹 Mark Task Complete
+// Mark a task complete
 function markTaskComplete(taskId) {
   fetch(`/employee/${id}/task/${taskId}/complete`, { method: "POST" })
     .then(res => res.json())
@@ -59,7 +59,7 @@ function markTaskComplete(taskId) {
     });
 }
 
-// 🔹 Load Training
+// Load training modules
 function loadTraining() {
   fetch(`/data/trainingChecklist.json`)
     .then(res => res.json())
@@ -90,7 +90,7 @@ function loadTraining() {
     });
 }
 
-// 🔹 Submit Training Module
+// Submit training module
 function completeModule(moduleId) {
   fetch(`/employee/${id}/onboarding`, {
     method: "POST",
@@ -104,7 +104,7 @@ function completeModule(moduleId) {
     });
 }
 
-// 🔹 Log Activity
+// Log manual workspace activity
 function logActivity() {
   fetch(`/employee/${id}/activity`, {
     method: "POST",
@@ -120,7 +120,7 @@ function logActivity() {
     });
 }
 
-// 🔹 Load Claim Panel with Status + ZIP
+// Load claim panel with status tracker + ZIP export
 function loadClaimBar(claimId) {
   fetch(`/claim/${claimId}`)
     .then(res => res.json())
@@ -150,7 +150,7 @@ function loadClaimBar(claimId) {
     });
 }
 
-// 🔹 Advance Claim Status
+// Advance claim status forward through lifecycle
 function advanceStatus(claimId, currentStatus) {
   const flow = ["received", "in_review", "zip_sent", "archived"];
   const nextIndex = flow.indexOf(currentStatus) + 1;
@@ -167,7 +167,7 @@ function advanceStatus(claimId, currentStatus) {
     });
 }
 
-// 🔹 Export ZIP (log event only)
+// Trigger ZIP export and log event
 function exportZIP(claimId) {
   fetch(`/claim/${claimId}/zip`, {
     method: "POST",
@@ -180,7 +180,7 @@ function exportZIP(claimId) {
     });
 }
 
-// 🔹 Load Notes
+// Load claim notes
 function loadNotes(claimId) {
   fetch(`/claim/${claimId}/notes`)
     .then(res => res.json())
@@ -199,7 +199,7 @@ function loadNotes(claimId) {
     });
 }
 
-// 🔹 Submit Note
+// Submit new note to claim
 function submitNote(claimId) {
   const msg = document.getElementById("newNote").value.trim();
   if (!msg) return alert("Note cannot be empty.");
@@ -216,7 +216,7 @@ function submitNote(claimId) {
     });
 }
 
-// 🔹 Load Filtered Claims
+// Run filtered claim search
 function loadFilteredClaims() {
   const status = document.getElementById("filterStatus").value;
   const client = document.getElementById("filterClient").value;
@@ -248,3 +248,10 @@ function loadFilteredClaims() {
       `;
     });
 }
+
+// Load KPI dashboard for admins
+function loadKPI() {
+  fetch(`/admin/${id}/kpi`)
+    .then(res => res.json())
+    .then(metrics => {
+      document.getElementById("content").inner
