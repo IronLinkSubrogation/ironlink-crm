@@ -1,5 +1,5 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🧠 IronLink CRM | Express Entry Point
+// 🧠 IronLink CRM | Backend Entry Point
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const express = require("express");
@@ -12,7 +12,7 @@ dotenv.config();
 const app = express();
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🔧 Global Middleware
+// 🔧 Middleware
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 app.use(cors());
 app.use(express.json());
@@ -20,18 +20,20 @@ app.use(express.json());
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🔗 Route Modules
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const authRoutes = require("./routes/auth");         // POST /auth/login
-const userRoutes = require("./routes/user");         // GET /user/me
-const caseRoutes = require("./routes/cases");        // Full case management
-const clientRoutes = require("./routes/clients");    // Full client management
+const authRoutes   = require("./routes/auth");     // Login route
+const userRoutes   = require("./routes/user");     // Identity check
+const caseRoutes   = require("./routes/cases");    // Case management
+const clientRoutes = require("./routes/clients");  // Client dashboard data
+const adminRoutes  = require("./routes/users");    // Admin-only user control
 
-app.use("/auth", authRoutes);
-app.use("/user", userRoutes);
-app.use("/cases", caseRoutes);
-app.use("/clients", clientRoutes);
+app.use("/auth", authRoutes);         // POST /auth/login
+app.use("/user", userRoutes);         // GET /user/me
+app.use("/cases", caseRoutes);        // Case CRUD with role restrictions
+app.use("/clients", clientRoutes);    // Client CRUD for admins
+app.use("/users", adminRoutes);       // Admin user CRUD
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🔍 Health Check (for Render & uptime tools)
+// 🔍 Health Check Endpoint
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 app.get("/health", (req, res) => {
   res.status(200).send("✅ IronLink backend is live");
@@ -41,7 +43,6 @@ app.get("/health", (req, res) => {
 // 🚀 Start Server
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => {
   console.log(`🚦 Server running on port ${PORT}`);
 });
