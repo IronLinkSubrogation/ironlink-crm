@@ -1,4 +1,4 @@
-require('dotenv').config(); // ✅ Load .env variables first
+require('dotenv').config();
 
 const express = require('express');
 const fs = require('fs');
@@ -7,31 +7,38 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_KEY;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-const SESSION_SECRET = process.env.SESSION_SECRET;
 const DATA_DIR = process.env.DATA_DIR || './data';
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Helper to load JSON files
-function loadJSON(fileName) {
-  return JSON.parse(fs.readFileSync(path.join(DATA_DIR, fileName), 'utf8'));
+// 🔐 Middleware for admin protection
+function verifyAdmin(req, res, next) {
+  const sentKey = req.headers['x-admin-key'];
+  if (sentKey !== ADMIN_KEY) {
+    return res.status(403).json({ error: 'Unauthorized: Invalid admin key' });
+  }
+  next();
 }
 
-// 🔹 Health Check
+// 🧠 Helper to load JSON data
+function loadJSON(file) {
+  return JSON.parse(fs.readFileSync(path.join(DATA_DIR, file), 'utf8'));
+}
+
+// 🏠 Optional: Serve frontend from root
 app.get('/', (req, res) => {
-  res.send(`✅ IronLink CRM is running on PORT ${PORT}`);
+  res.sendFile(path.join(__dirname, 'public', 'employee.html'));
 });
 
-// 🔹 Get Employee Profile
+// 🔹 Employee Profile
 app.get('/employee/:id', (req, res) => {
   const employees = loadJSON('employees.json');
   const profile = employees.find(e => e.id === req.params.id);
   profile ? res.json(profile) : res.status(404).json({ error: 'Employee not found' });
 });
 
-// 🔹 Get Dashboard
+// 🔹 Dashboard
 app.get('/employee/:id/dashboard', (req, res) => {
   const employees = loadJSON('employees.json');
   const tasks = loadJSON('employeeTasks.json');
@@ -41,13 +48,7 @@ app.get('/employee/:id/dashboard', (req, res) => {
   if (!employee) return res.status(404).json({ error: 'Employee not found' });
 
   res.json({
-    id: employee.id,
-    name: employee.name,
-    role: employee.role,
-    email: employee.email,
-    startDate: employee.startDate,
-    assignedClients: employee.assignedClients,
-    active: employee.active,
+    ...employee,
     tasks: taskBlock ? taskBlock.tasks : []
   });
 });
@@ -64,20 +65,19 @@ app.post('/employee/:id/task/:taskId/complete', (req, res) => {
   if (!task) return res.status(404).json({ error: 'Task not found' });
 
   task.status = 'done';
-  const entry = {
+  log.push({
     employeeId: req.params.id,
     action: `Completed task ${task.type}`,
     claimId: task.claimId,
     timestamp: new Date().toISOString()
-  };
+  });
 
-  log.push(entry);
   fs.writeFileSync(tasksPath, JSON.stringify(tasks, null, 2));
   fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
   res.json({ status: 'Task marked complete', task });
 });
 
-// 🔹 Log Activity
+// 🔹 Manual Activity Log
 app.post('/employee/:id/activity', (req, res) => {
   const logPath = path.join(DATA_DIR, 'activityLog.json');
   const log = loadJSON('activityLog.json');
@@ -97,7 +97,7 @@ app.post('/employee/:id/activity', (req, res) => {
   res.json({ status: 'Activity logged', entry });
 });
 
-// 🔹 Complete Training Module
+// 🔹 Training Module Completion
 app.post('/employee/:id/onboarding', (req, res) => {
   const checklistPath = path.join(DATA_DIR, 'trainingChecklist.json');
   const checklist = loadJSON('trainingChecklist.json');
@@ -113,7 +113,7 @@ app.post('/employee/:id/onboarding', (req, res) => {
   }
 
   fs.writeFileSync(checklistPath, JSON.stringify(checklist, null, 2));
-  res.json({ status: 'Module completed', moduleId });
+  res.json({ status: 'Training module logged', moduleId });
 });
 
 // 🔹 Get Claim
@@ -127,9 +127,9 @@ app.get('/claim/:id', (req, res) => {
 app.post('/claim/:id/status', (req, res) => {
   const claimsPath = path.join(DATA_DIR, 'claims.json');
   const claims = loadJSON('claims.json');
-  const claim = claims.find(c => c.id === req.params.id);
   const { newStatus } = req.body;
 
+  const claim = claims.find(c => c.id === req.params.id);
   if (!claim) return res.status(404).json({ error: 'Claim not found' });
   if (!newStatus) return res.status(400).json({ error: 'Missing newStatus' });
 
@@ -137,7 +137,7 @@ app.post('/claim/:id/status', (req, res) => {
   claim.lastUpdated = new Date().toISOString().split("T")[0];
 
   fs.writeFileSync(claimsPath, JSON.stringify(claims, null, 2));
-  res.json({ status: 'Claim updated', claim });
+  res.json({ status: 'Claim status updated', claim });
 });
 
 // 🔹 Claim Notes
@@ -166,7 +166,7 @@ app.post('/claim/:id/notes', (req, res) => {
   res.json({ status: 'Note added', entry });
 });
 
-// 🔹 Filter Claims
+// 🔹 Claim Filtering
 app.post('/claims/filter', (req, res) => {
   const claims = loadJSON('claims.json');
   const { status, client, date } = req.body;
@@ -179,7 +179,7 @@ app.post('/claims/filter', (req, res) => {
   res.json({ results: filtered });
 });
 
-// 🔹 Simulate ZIP Export
+// 🔹 ZIP Export Simulation
 app.post('/claim/:id/zip', (req, res) => {
   const logPath = path.join(DATA_DIR, 'activityLog.json');
   const log = loadJSON('activityLog.json');
@@ -187,25 +187,24 @@ app.post('/claim/:id/zip', (req, res) => {
 
   if (!employeeId) return res.status(400).json({ error: 'Missing employeeId' });
 
-  const entry = {
+  log.push({
     employeeId,
     action: "Exported ZIP for claim",
     claimId: req.params.id,
     timestamp: new Date().toISOString()
-  };
+  });
 
-  log.push(entry);
   fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
-  res.json({ status: "ZIP export logged", entry });
+  res.json({ status: "ZIP export logged" });
 });
 
-// 🔹 Admin KPI Dashboard
-app.get('/admin/:id/kpi', (req, res) => {
+// 🔹 KPI Dashboard (Protected)
+app.get('/admin/:id/kpi', verifyAdmin, (req, res) => {
   const log = loadJSON('activityLog.json');
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const recent = log.filter(entry => new Date(entry.timestamp) > sevenDaysAgo);
 
+  const recent = log.filter(entry => new Date(entry.timestamp) > sevenDaysAgo);
   const metrics = {
     tasksCompleted: recent.filter(e => e.action.startsWith("Completed task")).length,
     notesLogged: recent.filter(e => e.action === "Added claim note").length,
@@ -218,5 +217,5 @@ app.get('/admin/:id/kpi', (req, res) => {
 
 // 🔹 Start Server
 app.listen(PORT, () => {
-  console.log(`🚀 IronLink CRM backend running on port ${PORT}`);
+  console.log(`🚀 IronLink CRM backend live on port ${PORT}`);
 });
