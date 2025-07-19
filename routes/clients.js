@@ -7,18 +7,18 @@ const {
   createClient,
   updateClient,
   deleteClient,
-} = require("../controllers/clientController");
+} = require("../controllers/clientsController");
 
-// All logged-in users can view client list
-router.get("/", verifyToken, getAllClients);
+// GET /clients
+router.get("/", verifyToken, checkRole("admin"), getAllClients);
 
-// Admin-only: create client
+// POST /clients
 router.post("/", verifyToken, checkRole("admin"), createClient);
 
-// Admin-only: update client
+// PUT /clients/:id
 router.put("/:id", verifyToken, checkRole("admin"), updateClient);
 
-// Admin-only: delete client
+// DELETE /clients/:id
 router.delete("/:id", verifyToken, checkRole("admin"), deleteClient);
 
 module.exports = router;
