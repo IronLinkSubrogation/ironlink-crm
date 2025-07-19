@@ -1,21 +1,29 @@
 {
   "name": "ironlink-crm",
   "version": "1.0.0",
-  "description": "IronLink Subrogation CRM backend",
+  "description": "Custom CRM backend for IronLink Subrogation",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "lint": "eslint .",
+    "format": "prettier --write ."
   },
-  "keywords": ["subrogation", "CRM", "IronLink", "backend"],
-  "author": "Jonathan Stuart",
+  "keywords": [
+    "CRM",
+    "backend",
+    "subrogation",
+    "ironlink"
+  ],
+  "author": "Joshua Stuart",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
-    "multer": "^2.0.0",
-    "archiver": "^5.3.1"
+    "dotenv": "^16.4.1",
+    "express": "^4.18.2"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "nodemon": "^3.0.2",
+    "eslint": "^8.56.0",
+    "prettier": "^3.1.1"
   }
 }
