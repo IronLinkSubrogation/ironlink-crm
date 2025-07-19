@@ -6,24 +6,25 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 
-// Load environment variables
+// Load environment variables from .env
 dotenv.config();
+
 const app = express();
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🔧 Middleware
+// 🔧 Middleware Setup
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-app.use(cors());
-app.use(express.json());
+app.use(cors());               // Enable CORS for frontend access
+app.use(express.json());       // Parse JSON request bodies
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🔗 Routes
+// 🔗 Route Modules
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const authRoutes   = require("./routes/auth");
-const userRoutes   = require("./routes/user");     // GET /user/me
-const caseRoutes   = require("./routes/cases");
-const clientRoutes = require("./routes/clients");
-const adminRoutes  = require("./routes/users");
+const authRoutes   = require("./routes/auth");     // Login, token generation
+const userRoutes   = require("./routes/user");     // Identity: GET /user/me
+const caseRoutes   = require("./routes/cases");    // Role-gated case data
+const clientRoutes = require("./routes/clients");  // Admin-only client control
+const adminRoutes  = require("./routes/users");    // Admin-only user management
 
 app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
@@ -32,7 +33,7 @@ app.use("/clients", clientRoutes);
 app.use("/users", adminRoutes);
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🔍 Health Check
+// 🔍 Health Check Route
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 app.get("/health", (req, res) => {
   res.status(200).send("✅ IronLink backend is live");
