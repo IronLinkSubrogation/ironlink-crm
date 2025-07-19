@@ -1,36 +1,35 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🧠 IronLink CRM | Express Entry Point
+// 🧠 IronLink CRM | Express Backend
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 
-// Load environment variables from .env
+// Load environment variables
 dotenv.config();
-
 const app = express();
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🔧 Middleware Setup
+// 🔧 Middleware
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-app.use(cors());                  // Enable cross-origin access
-app.use(express.json());         // Parse JSON payloads
+app.use(cors());
+app.use(express.json());
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🔗 Route Modules
+// 🔗 Routes
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const authRoutes   = require("./routes/auth");     // Login
-const userRoutes   = require("./routes/user");     // Identity check
-const caseRoutes   = require("./routes/cases");    // Case management
-const clientRoutes = require("./routes/clients");  // Client CRUD
-const adminRoutes  = require("./routes/users");    // Admin: manage users
+const authRoutes   = require("./routes/auth");
+const userRoutes   = require("./routes/user");     // GET /user/me
+const caseRoutes   = require("./routes/cases");
+const clientRoutes = require("./routes/clients");
+const adminRoutes  = require("./routes/users");
 
-app.use("/auth", authRoutes);         // POST /auth/login
-app.use("/user", userRoutes);         // GET /user/me
-app.use("/cases", caseRoutes);        // /cases endpoints
-app.use("/clients", clientRoutes);    // /clients endpoints
-app.use("/users", adminRoutes);       // /users endpoints
+app.use("/auth", authRoutes);
+app.use("/user", userRoutes);
+app.use("/cases", caseRoutes);
+app.use("/clients", clientRoutes);
+app.use("/users", adminRoutes);
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🔍 Health Check
@@ -40,7 +39,7 @@ app.get("/health", (req, res) => {
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🚀 Start Express Server
+// 🚀 Start Server
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
